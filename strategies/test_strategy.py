@@ -40,7 +40,7 @@ class SimpleMovingAverageStrategy(bt.Strategy):
 
 class MAcrossover(bt.Strategy): 
     # Moving average parameters
-    params = (('pfast',20),('pslow',50),)
+    params = (('pfast',30),('pslow',50),)
 
     def log(self, txt, dt=None):
         dt = dt or self.datas[0].datetime.date(0)
@@ -102,3 +102,89 @@ class MAcrossover(bt.Strategy):
             if len(self) >= (self.bar_executed + 5):
                 self.log(f'CLOSE CREATE {self.dataclose[0]:2f}')
                 self.order = self.close()
+
+class RSI2Strategy(bt.Strategy):
+    params = (
+        ('rsi_period', 2),      # Period for the RSI calculation
+        ('oversold_level', 10), # Threshold for oversold condition
+        ('overbought_level', 90) # Threshold for overbought condition
+    )
+
+    def __init__(self):
+        self.rsi = bt.indicators.RSI(period=self.params.rsi_period)
+
+    def next(self):
+        if self.rsi < self.params.oversold_level:
+            self.buy()
+        elif self.rsi > self.params.overbought_level:
+            self.sell()
+
+
+class BreakoutStrategy(bt.Strategy):
+    params = (
+        ('breakout_period', 20),  # Period for calculating breakout levels
+        ('stop_loss', 0.02),       # Percentage for stop-loss order
+        ('take_profit', 0.04)      # Percentage for take-profit order
+    )
+
+    def __init__(self):
+        self.high = self.data.high
+        self.low = self.data.low
+        self.close = self.data.close
+
+        self.breakout_level = bt.indicators.Highest(self.high(-1), period=self.params.breakout_period)
+        self.stop_loss_price = self.close * (1 - self.params.stop_loss)
+        self.take_profit_price = self.close * (1 + self.params.take_profit)
+
+    def next(self):
+        if self.close > self.breakout_level:
+            # Enter long position if price breaks above breakout level
+            self.buy()
+
+            # Place stop-loss order
+            self.sell(exectype=bt.Order.Stop, price=self.stop_loss_price)
+
+            # Place take-profit order
+            self.sell(exectype=bt.Order.Limit, price=self.take_profit_price)
+
+class BreakdownStrategy(bt.Strategy):
+    params = (
+        ('breakdown_period', 20),  # Period for calculating breakdown levels
+        ('stop_loss', 0.02),        # Percentage for stop-loss order
+        ('take_profit', 0.04)       # Percentage for take-profit order
+    )
+
+    def __init__(self):
+        self.breakdown_level = bt.indicators.Lowest(self.data.low(-1), period=self.params.breakdown_period)
+        self.stop_loss_price = self.data.close * (1 + self.params.stop_loss)
+        self.take_profit_price = self.data.close * (1 - self.params.take_profit)
+
+    def next(self):
+        if self.data.close < self.breakdown_level:
+            # Enter short position if price breaks below breakdown level
+            self.sell()
+
+            # Place stop-loss order
+            self.buy(exectype=bt.Order.Stop, price=self.stop_loss_price)
+
+            # Place take-profit order
+            self.buy(exectype=bt.Order.Limit, price=self.take_profit_price)
+
+class RSIOverboughtOversoldStrategy(bt.Strategy):
+    params = (
+        ('rsi_period', 14),    # Period for calculating RSI
+        ('overbought_level', 70),  # Threshold for overbought condition
+        ('oversold_level', 30)     # Threshold for oversold condition
+    )
+
+    def __init__(self):
+        self.rsi = bt.indicators.RSI(period=self.params.rsi_period)
+
+    def next(self):
+        if self.rsi > self.params.overbought_level:
+            # Enter short position if RSI is above overbought level
+            self.sell()
+
+        elif self.rsi < self.params.oversold_level:
+            # Enter long position if RSI is below oversold level
+            self.buy()
