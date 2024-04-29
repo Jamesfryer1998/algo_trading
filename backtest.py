@@ -18,13 +18,14 @@ tickers = ["NVDA", "AAPL"]
 
 currencies = ["USD", "JPY", "LEV"]
 
-time = (datetime.today() - timedelta(days=7)).date()
+time = (datetime.today() - timedelta(days=5)).date()
 
 def generate_combinations(strats, tickers, currencies, time):
     combinations = []
 
     for ticker in tickers:
         for strat in strats:
+            print(strat, ticker)
             backtest = Backtest(strat, ticker, to_date=time, interval='1m')
             combinations.append(backtest)
 
@@ -44,10 +45,12 @@ for i in combinations:
     print(i.ticker)
     try:
         i.run()
-    except ValueError as e:
+    except ZeroDivisionError as e:
         print(f"Skipping {i.ticker}: {e}")
         continue
 
+for i in combinations:
+    print(i.pnl)
 
 
 # Testing

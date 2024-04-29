@@ -13,7 +13,7 @@ def logdata(self):
 
 class TestStrategy(bt.Strategy):
     def __init__(self):
-        print('Initializing Strategy')
+        print('TestStrategy')
         self.data_live = False
 
     def next(self):
@@ -29,6 +29,7 @@ class SimpleMovingAverageStrategy(bt.Strategy):
     )
 
     def __init__(self):
+        print('SimpleMovingAverageStrategy')
         self.sma_fast = bt.indicators.SimpleMovingAverage(self.data, period=self.params.sma_period_fast)
         self.sma_slow = bt.indicators.SimpleMovingAverage(self.data, period=self.params.sma_period_slow)
         self.crossover = bt.indicators.CrossOver(self.sma_fast, self.sma_slow)
@@ -50,6 +51,7 @@ class MAcrossover(bt.Strategy):
         print(f'{dt.isoformat()} {txt}') # Comment this line when running optimization
 
     def __init__(self):
+        print('MAcrossover')
         self.dataclose = self.datas[0].close
         
 		# Order variable will contain ongoing order details/status
@@ -115,6 +117,7 @@ class RSI2Strategy(bt.Strategy):
     )
 
     def __init__(self):
+        print('RSI2Strategy')
         self.rsi = bt.indicators.RSI(period=self.params.rsi_period)
 
     def next(self):
@@ -133,6 +136,7 @@ class BreakoutStrategy(bt.Strategy):
     )
 
     def __init__(self):
+        print('BreakoutStrategy')
         self.high = self.data.high
         self.low = self.data.low
         self.close = self.data.close
@@ -161,6 +165,7 @@ class BreakdownStrategy(bt.Strategy):
     )
 
     def __init__(self):
+        print('BreakdownStrategy')
         self.breakdown_level = bt.indicators.Lowest(self.data.low(-1), period=self.params.breakdown_period)
         self.stop_loss_price = self.data.close * (1 + self.params.stop_loss)
         self.take_profit_price = self.data.close * (1 - self.params.take_profit)
@@ -185,6 +190,7 @@ class RSIOverboughtOversoldStrategy(bt.Strategy):
     )
 
     def __init__(self):
+        print('RSIOverboughtOversoldStrategy')
         self.rsi = bt.indicators.RSI(period=self.params.rsi_period)
 
     def next(self):
