@@ -20,7 +20,6 @@ class Backtest():
 
         if self.fsym != None:
             self.ticker = self.build_ticker()
-            print(self.ticker)
 
     def build_ticker(self):
         return f'{self.tsym}{self.fsym}=X'
@@ -28,6 +27,7 @@ class Backtest():
     def add_data(self):
         data = DownloadData(ticker=self.ticker, to_date=self.to_date, from_date=self.from_date, interval=self.interval).run()
         self.cerebro.adddata(data)
+
 
     def add_strategy(self):
         self.cerebro.addstrategy(self.strategy)
@@ -39,13 +39,17 @@ class Backtest():
         self.cerebro.broker.setcommission(commission=0.00002) 
 
     def run_backtrader(self):
-        return self.cerebro.run()
+        try:
+            return self.cerebro.run()
+        except ValueError as e:
+            print(f"Failed to run backtrader: {e}")
+            return []
 
     def evaluate(self):
         thestrats = self.run_backtrader()
-        thestrat = thestrats[0]
-        print('Evaluation metric', thestrat.analyzers.evaluation.get_analysis())
-
+        if thestrats:
+            thestrat = thestrats[0]
+            print('Evaluation metric', thestrat.analyzers.evaluation.get_analysis())
 
     def run(self):
         start_portfolio_value = self.cerebro.broker.getvalue()
@@ -54,13 +58,13 @@ class Backtest():
         self.add_strategy()
         self.add_analyzer()
         self.add_commision()
-        # self.cerebro.addsizer(bt.sizers.SizerFix, stake=10)
+
         self.evaluate()
 
         end_portfolio_value = self.cerebro.broker.getvalue()
         pnl = end_portfolio_value - start_portfolio_value
-        print(f'Starting Portfolio Value: {start_portfolio_value:2f}')
-        print(f'Final Portfolio Value: {end_portfolio_value:2f}')
+        print(f'Starting Portfolio Value: {start_portfolio_value:.2f}')
+        print(f'Final Portfolio Value: {end_portfolio_value:.2f}')
         print(f'PnL: {pnl:.2f}')
         
         # self.cerebro.plot()

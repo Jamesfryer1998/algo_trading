@@ -1,25 +1,26 @@
 import backtrader as bt
 
+def logdata(self):
+    txt = []
+    txt.append('{}'.format(len(self)))
+    txt.append('{}'.format(self.data.datetime.datetime(0).isoformat()))
+    txt.append('{:.2f}'.format(self.data.open[0]))
+    txt.append('{:.2f}'.format(self.data.high[0]))
+    txt.append('{:.2f}'.format(self.data.low[0]))
+    txt.append('{:.2f}'.format(self.data.close[0]))
+    txt.append('{:.2f}'.format(self.data.volume[0]))
+    print(','.join(txt))
+
 class TestStrategy(bt.Strategy):
     def __init__(self):
         print('Initializing Strategy')
         self.data_live = False
 
     def next(self):
-        self.logdata()
+        #logdata(self)
         if not self.data_live:
             return
 
-    def logdata(self):
-        txt = []
-        txt.append('{}'.format(len(self)))
-        txt.append('{}'.format(self.data.datetime.datetime(0).isoformat()))
-        txt.append('{:.2f}'.format(self.data.open[0]))
-        txt.append('{:.2f}'.format(self.data.high[0]))
-        txt.append('{:.2f}'.format(self.data.low[0]))
-        txt.append('{:.2f}'.format(self.data.close[0]))
-        txt.append('{:.2f}'.format(self.data.volume[0]))
-        print(','.join(txt))
 
 class SimpleMovingAverageStrategy(bt.Strategy):
     params = (
@@ -37,6 +38,8 @@ class SimpleMovingAverageStrategy(bt.Strategy):
             self.buy()          # Enter long position
         elif self.crossover < 0:  # If fast SMA crosses below slow SMA
             self.sell()
+
+        #logdata(self)
 
 class MAcrossover(bt.Strategy): 
     # Moving average parameters
@@ -66,10 +69,10 @@ class MAcrossover(bt.Strategy):
         # Check if an order has been completed
         # Attention: broker could reject order if not enough cash
         if order.status in [order.Completed]:
-            if order.isbuy():
-                self.log(f'BUY EXECUTED, {order.executed.price:.2f}')
-            elif order.issell():
-                self.log(f'SELL EXECUTED, {order.executed.price:.2f}')
+            # if order.isbuy():
+            #     self.log(f'BUY EXECUTED, {order.executed.price:.2f}')
+            # elif order.issell():
+            #     self.log(f'SELL EXECUTED, {order.executed.price:.2f}')
             self.bar_executed = len(self)
 
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
@@ -80,6 +83,7 @@ class MAcrossover(bt.Strategy):
 
     def next(self):
         # Check for open orders
+        #logdata(self)
         if self.order:
             return
 
@@ -89,18 +93,18 @@ class MAcrossover(bt.Strategy):
                 
             #If the 20 SMA is above the 50 SMA
             if self.fast_sma[0] > self.slow_sma[0] and self.fast_sma[-1] < self.slow_sma[-1]:
-                self.log(f'BUY CREATE {self.dataclose[0]:2f}')
+                # self.log(f'BUY CREATE {self.dataclose[0]:2f}')
                 # Keep track of the created order to avoid a 2nd order
                 self.order = self.buy()
             #Otherwise if the 20 SMA is below the 50 SMA   
             elif self.fast_sma[0] < self.slow_sma[0] and self.fast_sma[-1] > self.slow_sma[-1]:
-                self.log(f'SELL CREATE {self.dataclose[0]:2f}')
+                # self.log(f'SELL CREATE {self.dataclose[0]:2f}')
                 # Keep track of the created order to avoid a 2nd order
                 self.order = self.sell()
         else:
             # We are already in the market, look for a signal to CLOSE trades
             if len(self) >= (self.bar_executed + 5):
-                self.log(f'CLOSE CREATE {self.dataclose[0]:2f}')
+                # self.log(f'CLOSE CREATE {self.dataclose[0]:2f}')
                 self.order = self.close()
 
 class RSI2Strategy(bt.Strategy):
@@ -114,6 +118,7 @@ class RSI2Strategy(bt.Strategy):
         self.rsi = bt.indicators.RSI(period=self.params.rsi_period)
 
     def next(self):
+        #logdata(self)
         if self.rsi < self.params.oversold_level:
             self.buy()
         elif self.rsi > self.params.overbought_level:
@@ -137,6 +142,7 @@ class BreakoutStrategy(bt.Strategy):
         self.take_profit_price = self.close * (1 + self.params.take_profit)
 
     def next(self):
+        #logdata(self)
         if self.close > self.breakout_level:
             # Enter long position if price breaks above breakout level
             self.buy()
@@ -160,6 +166,7 @@ class BreakdownStrategy(bt.Strategy):
         self.take_profit_price = self.data.close * (1 - self.params.take_profit)
 
     def next(self):
+        #logdata(self)
         if self.data.close < self.breakdown_level:
             # Enter short position if price breaks below breakdown level
             self.sell()
@@ -181,6 +188,7 @@ class RSIOverboughtOversoldStrategy(bt.Strategy):
         self.rsi = bt.indicators.RSI(period=self.params.rsi_period)
 
     def next(self):
+        #logdata(self)
         if self.rsi > self.params.overbought_level:
             # Enter short position if RSI is above overbought level
             self.sell()

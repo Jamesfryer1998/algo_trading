@@ -1,5 +1,5 @@
 import yfinance as yf
-from datetime import datetime 
+from datetime import datetime
 import backtrader as bt
 
 
@@ -10,12 +10,36 @@ class DownloadData():
         self.from_date = from_date
         self.interval = interval
 
-    def get_data(self):
-        if self.interval != None:
-            data = bt.feeds.PandasData(dataname=yf.download(self.ticker, self.to_date, self.from_date, interval=self.interval, auto_adjust=True))
+    def get_data_feed(self):
+        if self.interval is not None:
+            try:
+                data = yf.download(self.ticker, self.to_date, self.from_date, interval=self.interval, auto_adjust=True)
+                self.data = bt.feeds.PandasData(dataname=data)
+            except ValueError as e:
+                print('No Data Found')
         else:
-            data = bt.feeds.PandasData(dataname=yf.download(self.ticker, self.to_date, self.from_date, auto_adjust=True))
-        return data
+            try:
+                data =yf.download(self.ticker, self.to_date, self.from_date, auto_adjust=True)
+                self.data = bt.feeds.PandasData(dataname=data)
+            except ValueError as e:
+                print('No Data Found')
+
+        return self.data
     
+    def print_data(self):
+        # Print data
+        for i, d in enumerate(self.data):
+            print("Data Point", i+1)
+            print("Date:", d.datetime.date())
+            print("Time:", d.datetime.time())
+            print("High:", d.high)
+            print("Low:", d.low)
+            print("Open:", d.open)
+            print("Close:", d.close)
+            print("Volume:", d.volume)
+            print("Open Interest:", d.openinterest)
+            print("-" * 30)
+    
+
     def run(self):
-        return self.get_data()
+        return self.get_data_feed()
