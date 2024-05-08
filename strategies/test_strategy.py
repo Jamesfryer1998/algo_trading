@@ -12,6 +12,7 @@ def logdata(self):
     print(','.join(txt))
 
 class TestStrategy(bt.Strategy):
+
     def __init__(self):
         print('TestStrategy')
         self.data_live = False

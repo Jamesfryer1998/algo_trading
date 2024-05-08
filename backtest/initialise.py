@@ -1,7 +1,4 @@
-import sys
 import numpy as np
-sys.path.append('/Users/james/Projects/algo_trading/')
-
 from backtest.data_download import *
 from strategies.test_strategy import *
 import backtrader.analyzers as btanalyzers
