@@ -70,4 +70,4 @@ data_dir = '/Users/james/Projects/algo_trading/backtest/data'
 num_days = 30  # Number of days to go back
 evaluation = Evaluation(data_dir, num_days)
 evaluation.plot_average_pnl()
-evaluation.plot_ticker_pnl('NVDA')
+# evaluation.plot_ticker_pnl('AAPL')

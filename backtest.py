@@ -85,5 +85,5 @@ def run_backtest():
 
 run_backtest()
 
-# send_email("jamesfryer1998@gmail.com", "test subject", df)
+send_email("jamesfryer1998@gmail.com", "Backtesting complete", "Complete")
 # print(df)

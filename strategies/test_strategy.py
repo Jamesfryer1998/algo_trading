@@ -38,8 +38,12 @@ class SimpleMovingAverageStrategy(bt.Strategy):
     def next(self):
         if self.crossover > 0:  # If fast SMA crosses above slow SMA
             self.buy()          # Enter long position
+            self.signal = 'buy'
         elif self.crossover < 0:  # If fast SMA crosses below slow SMA
             self.sell()
+            self.signal = 'sell'
+        else:
+            self.signal = 'hold'
 
         #logdata(self)
 
