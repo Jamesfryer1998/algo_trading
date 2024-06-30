@@ -1,10 +1,10 @@
 from ib_insync import *
 import pandas as pd
-from datetime import datetime, time
+from datetime import datetime
+import time
 import backtrader as bt
 import backtrader.feeds as btfeeds
 import backtrader.analyzers as btanalyzers
-
 from strategies.test_strategy import *
 
 
@@ -12,140 +12,116 @@ class LiveData:
     def __init__(self, ticker):
         self.ticker = ticker
         self.ib = IB()
-        self.ib.disconnect()
-        self.date = None
         self.connected = False
 
-    def fetch_forex_price(self, verbose=0):        
+    def fetch_forex_price(self, verbose=0):
+        print(f"Fetching price for {self.ticker}...")
         contract = Forex(self.ticker)
-        
-        # Request market data
         self.ib.reqMktData(contract)
-
-        # Wait for the price data to be received
         ticker = self.ib.ticker(contract)
-        self.ib.sleep(10)
+        self.ib.sleep(2)  # Adjust sleep time based on your latency and data availability
 
-        # Retrieve the latest price
         price = ticker.marketPrice()
-
         if verbose == 1:
             print(f"{self.ticker} Price: {price}")
 
-        # return price
-            
-        test_price = 1.45
-        return test_price
+        if price is None:
+            print(f"Failed to fetch price for {self.ticker}")
+        else:
+            print(f"Fetched price for {self.ticker}: {price}")
+        return price
 
-    def concat_data(self, prev_df, next_df):
-        new_df = pd.DataFrame(next_df)
-        vertical_stack = pd.concat([prev_df, new_df], axis=0) 
-        return vertical_stack
-    
-    def collect_data(self):
-        date = datetime.now()
-        price = self.fetch_forex_price()
-        data = {'date': [date],
-                'ticker': [self.ticker],
-                'price': [price]}
-        df = pd.DataFrame(data)
-        return df
-    
     def connect(self):
         if not self.connected:
+            print("Connecting to IBKR...")
             self.ib.connect('127.0.0.1', 7497, clientId=1)
             print('IBKR Connected')
             self.connected = True
-        else:
-            print('IBKR already connected')
-
 
     def disconnect(self):
-        # Ensure we have dissconnected
-        while self.ib.isConnected():
+        if self.connected:
+            print("Disconnecting from IBKR...")
             self.ib.disconnect()
-            print('IBKR Disconnected.')
+            print('IBKR Disconnected')
+            self.connected = False
 
-    def run(self):
+    def get_live_data(self):
         self.connect()
-        df = None
-        while datetime.now().time() < time(23, 0):
-            new_data = self.collect_data()
-            df = self.concat_data(df, new_data)
-            print(df)
-            # return df
-
-        print('Markets have closed.')
-
+        while True:
+            try:
+                price = self.fetch_forex_price(verbose=1)
+                timestamp = datetime.now()
+                print(f"Yielding data - Timestamp: {timestamp}, Price: {price}")
+                yield timestamp, price
+                time.sleep(10)  # Adjust sleep duration for your requirements
+            except Exception as e:
+                print(f"Error fetching live data: {e}")
+                time.sleep(10)  # Retry after a short delay in case of error
         self.disconnect()
 
 
 
-class LiveTrading:
-    def __init__(self, ticker, strategy):
-        self.ticker = ticker
-        self.strategy = strategy
-        self.data = None
-        self.live_data = LiveData(self.ticker)
-        self.live_data.disconnect()
-        self.cerebro = bt.Cerebro()
+class LiveDataFeed(bt.feeds.PandasData):
+    params = (
+        ('datetime', None),
+        ('open', -1),
+        ('high', -1),
+        ('low', -1),
+        ('close', -1),
+        ('volume', -1),
+        ('openinterest', -1),
+    )
 
-    def get_continuous_data(self):
-        new_data = self.live_data.collect_data()
-        self.data = self.live_data.concat_data(self.data, new_data)
+    def __init__(self, live_data_gen):
+        self.live_data_gen = live_data_gen
+        print("Initializing LiveDataFeed with live data generator...")
+        super().__init__()
 
-    def check_time(self, time_to):
-        if datetime.now().time() < time(time_to, 59):
+    def start(self):
+        print("Starting LiveDataFeed...")
+        self.iter = iter(self.live_data_gen)
+        super().start()
+
+    def _load(self):
+        try:
+            timestamp, price = next(self.iter)
+            print(f"Loading data - Timestamp: {timestamp}, Price: {price}")
+            self.lines.datetime[0] = bt.date2num(timestamp)
+            self.lines.close[0] = price
+            self.lines.open[0] = price
+            self.lines.high[0] = price
+            self.lines.low[0] = price
+            self.lines.volume[0] = 0
+            self.lines.openinterest[0] = 0
             return True
-        else:
+        except StopIteration:
+            print("Live data generator exhausted.")
             return False
-    
-    def add_data(self):
-        data = btfeeds.PandasData(dataname=self.data)
-        self.cerebro.adddata(data)
-    
-    def add_strategy(self):
-        self.cerebro.addstrategy(self.strategy)
+        except Exception as e:
+            print(f"Error in _load: {e}")
+            return False
 
-    def add_analyzer(self):
-        self.cerebro.addanalyzer(btanalyzers.SharpeRatio, _name='evaluation')
 
-    def run(self):
-        self.live_data.connect()
+def run_live_trading():
+    print("Setting up live trading...")
+    cerebro = bt.Cerebro()
 
-        # Configure Trader
-        self.add_strategy()
-        self.add_analyzer()
+    # Create and test the live data generator
+    live_data_gen = LiveData('EURUSD').get_live_data()
+    print("Live data generator created.")
 
-        # Continuously run and collect data
-        while self.check_time(23):
-            self.get_continuous_data()
-            self.add_data()
+    # Add live data feed
+    live_data_feed = LiveDataFeed(dataname=pd.DataFrame(), live_data_gen=live_data_gen)
+    cerebro.adddata(live_data_feed)
+    print("Live data feed added to Cerebro.")
 
-            # Run Backtrader engine
-            self.cerebro.run()
+    # Add strategy
+    cerebro.addstrategy(RSIOverboughtOversoldStrategy)
+    print("Strategy added to Cerebro.")
 
-            # Extract signals from the strategy
-            signals = self.cerebro.strategy.signal
+    print("Starting Cerebro engine...")
+    cerebro.run()
+    print("Cerebro engine run completed.")
 
-            # Process signals
-            if signals == 'buy':
-                print("Buy signal detected")
-                return True
-            elif signals == 'sell':
-                print("Sell signal detected")
-                return False
-            else:
-                print("No signal or hold")
-                return None
-
-        print('Markets closed')
-
-        self.live_data.disconnect()
-
-LiveTrading('GBPUSD', SimpleMovingAverageStrategy).run()
-
-    
-# if __name__ == "__main__":
-#     live_data = LiveData('GBPUSD')
-#     live_data.run()
+if __name__ == "__main__":
+    run_live_trading()
