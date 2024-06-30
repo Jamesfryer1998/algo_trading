@@ -4,6 +4,7 @@ from strategies.test_strategy import *
 import pandas as pd
 from utils.gmailer import send_email
 import os
+import multiprocessing as mp
 
 list_strats = [TestStrategy, 
                MAcrossover, 
@@ -15,9 +16,6 @@ list_strats = [TestStrategy,
 
 tickers = ["NVDA", "AAPL", "AMZN", "GOOGL"]
 currencies = ["USD", "JPY", "LEV", "AUD", "CHF", "CAD", "GBP", "HKD", "NZD", "KRW"]
-
-# tickers = ["NVDA"]
-# currencies = ["USD", "JPY"]
 
 time = (datetime.today() - timedelta(days=5)).date()
 
@@ -36,18 +34,22 @@ def generate_combinations(strats, tickers, currencies, time):
 
     return combinations
 
-def run_backtests(combinations):
-    results = []
-    for object in combinations:
-        print(object.ticker)
-        try:
-            object.run()
-            capture_results(object, results)
-        except ZeroDivisionError as e:
-            print(f"Skipping {object.ticker}: {e}")
-            continue
+def run_backtest_instance(object):
+    try:
+        object.run()
+        result = capture_results(object)
+        return result
+    except ZeroDivisionError as e:
+        print(f"Skipping {object.ticker}: {e}")
+        return None
 
-    return results
+def capture_results(object):
+    return {
+        "ticker": object.ticker,
+        "date": object.to_date,
+        "strategy": strategy_to_string(object.strategy),
+        "pnl": object.pnl
+    }
 
 def strategy_to_string(strategy):
     if strategy == TestStrategy:
@@ -63,27 +65,24 @@ def strategy_to_string(strategy):
     if strategy == BreakdownStrategy:
         return "RSIOverboughtOversoldStrategy"
     if strategy == TestStrategy:
-        return "RSIOverboughtOversoldStrategy"    
-
-def capture_results(object, results):
-    result = {"ticker": object.ticker,
-          "date": object.to_date,
-          "strategy": strategy_to_string(object.strategy),
-          "pnl": object.pnl}
-    results.append(result)
+        return "RSIOverboughtOversoldStrategy"
 
 def run_backtest():
     combinations = generate_combinations(list_strats, tickers, currencies, time)
-    df = pd.DataFrame(run_backtests(combinations))
-    profitablf_df = df[df["pnl"] > 1]
+    
+    with mp.Pool(processes=mp.cpu_count()) as pool:
+        results = pool.map(run_backtest_instance, combinations)
+    
+    results = [res for res in results if res is not None]
+    df = pd.DataFrame(results)
+    profitable_df = df[df["pnl"] > 1]
 
     file_path = 'backtest/data'
     today_date = datetime.now().strftime("%d-%m-%Y")
     file_name = os.path.join(file_path, f"{today_date}.csv")
 
-    profitablf_df.to_csv(file_name, index=False)
+    profitable_df.to_csv(file_name, index=False)
 
-run_backtest()
-
-send_email("jamesfryer1998@gmail.com", "Backtesting complete", "Complete")
-# print(df)
+if __name__ == "__main__":
+    run_backtest()
+    send_email("jamesfryer1998@gmail.com", "Backtesting complete", "Complete")

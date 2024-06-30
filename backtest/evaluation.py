@@ -21,7 +21,8 @@ class Evaluation:
                 df_list.append(df)
         
         if df_list:
-            self.df = pd.concat(df_list)
+            self.df = pd.concat(df_list, ignore_index=True)
+            self.df.sort_values(by='date', inplace=True)
         else:
             print("No data found for the specified number of days.")
 
