@@ -19,7 +19,7 @@ class DownloadData():
                 print('No Data Found')
         else:
             try:
-                data =yf.download(self.ticker, self.to_date, self.from_date, auto_adjust=True)
+                data = yf.download(self.ticker, self.to_date, self.from_date, auto_adjust=True)
                 self.data = bt.feeds.PandasData(dataname=data)
             except ValueError as e:
                 print('No Data Found')
