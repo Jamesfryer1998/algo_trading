@@ -1,39 +1,45 @@
-from ib_insync import *
+# import sys
+# import os
 
-def fetch_forex_price(input_ticker, verbose=0):
-    ib = IB()
-    ib.disconnect()
-    ib.connect('127.0.0.1', 7497, clientId=1)  # Connect to IBKR TWS or IB Gateway
+# # Add the project root directory to the sys.path
+# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+# sys.path.append(project_root)
+
+from strategies.test_strategy import *
+# from ib_insync import *
+# import backtrader as bt
+from ib_insync import IB, Forex
+
+# def fetch_forex_price(input_ticker, verbose=0):
+#     ib = IB()
+#     ib.disconnect()
+#     ib.connect('127.0.0.1', 7497, clientId=1)  # Connect to IBKR TWS or IB Gateway
     
-    contract = Forex(input_ticker)
+#     contract = Forex(input_ticker)
     
-    # Request market data
-    ib.reqMktData(contract)
-    # print(ib.accountSummary(account='DU8809497'))
+#     # Request market data
+#     ib.reqMktData(contract)
+#     # print(ib.accountSummary(account='DU8809497'))
 
-    # Wait for the price data to be received
-    ticker = ib.ticker(contract)
-    ib.sleep(10)
+#     # Wait for the price data to be received
+#     ticker = ib.ticker(contract)
+#     ib.sleep(10)
 
-    # Retrieve the latest price
-    price = ticker.marketPrice()
+#     # Retrieve the latest price
+#     price = ticker.marketPrice()
 
-    while ib.isConnected():
-        ib.disconnect()
+#     while ib.isConnected():
+#         ib.disconnect()
 
-    if verbose == 1:
-        print(f"{input_ticker} Price: {price}")
+#     if verbose == 1:
+#         print(f"{input_ticker} Price: {price}")
 
-    return price
+#     return price
 
 # if __name__ == '__main__':
 #     while True:
 #         price = fetch_forex_price('GBPUSD', 1)
 
-
-from strategies.test_strategy import *
-import backtrader as bt
-from ib_insync import IB, Forex
 
 class IBKRLiveData(bt.feeds.DataBase):
     lines = ('datetime', 'open', 'high', 'low', 'close', 'volume')
@@ -102,3 +108,4 @@ class LiveTrading:
 if __name__ == '__main__':
     live_trading = LiveTrading(SimpleMovingAverageStrategy)
     live_trading.run()
+

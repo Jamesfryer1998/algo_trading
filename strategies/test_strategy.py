@@ -189,21 +189,21 @@ class BreakdownStrategy(bt.Strategy):
 
 class RSIOverboughtOversoldStrategy(bt.Strategy):
     params = (
-        ('rsi_period', 14),    # Period for calculating RSI
-        ('overbought_level', 70),  # Threshold for overbought condition
-        ('oversold_level', 30)     # Threshold for oversold condition
+        ('rsi_period', 14),
+        ('rsi_overbought', 70),
+        ('rsi_oversold', 30),
     )
 
     def __init__(self):
         print('RSIOverboughtOversoldStrategy')
-        self.rsi = bt.indicators.RSI(period=self.params.rsi_period)
+        self.rsi = bt.indicators.RSI_SMA(period=self.params.rsi_period)
+        print("RSI Indicator initialized.")
 
     def next(self):
-        #logdata(self)
-        if self.rsi > self.params.overbought_level:
-            # Enter short position if RSI is above overbought level
-            self.sell()
-
-        elif self.rsi < self.params.oversold_level:
-            # Enter long position if RSI is below oversold level
+        print(f"Next called at {self.datas[0].datetime.datetime(0)}, Close: {self.data.close[0]}")
+        if self.rsi < self.params.rsi_oversold:
+            print(f"RSI below {self.params.rsi_oversold}: Buy signal generated.")
             self.buy()
+        elif self.rsi > self.params.rsi_overbought:
+            print(f"RSI above {self.params.rsi_overbought}: Sell signal generated.")
+            self.sell()

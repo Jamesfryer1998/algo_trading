@@ -3,8 +3,6 @@ import pandas as pd
 from datetime import datetime
 import time
 import backtrader as bt
-import backtrader.feeds as btfeeds
-import backtrader.analyzers as btanalyzers
 from strategies.test_strategy import *
 
 
