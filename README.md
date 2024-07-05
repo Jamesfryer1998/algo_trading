@@ -30,27 +30,32 @@ Monitor the application as it executes trades based on real-time market data.
 
 
 ## Setup
-This repo relies upon the use of anaconda (conda) for its environment setup. I have created a environment.yml file you can clone the environment from:
+This repository utilizes Anaconda (conda) for environment management. To set up the environment, use the provided environment.yml file:
 
 ```
 conda env create -f environment.yml
-conda acivate backtrader
+conda activate backtrader
 ```
 
-Due to the age of backtrader and the advancements from python 2 -> 3, we need to setup the ```ibpy2``` package to use python 3. To do so, run this command:
+Backtrader relies on ```ibpy2```, which requires compatibility adjustments for Python 3 due to its original design for Python 2. To update ibpy2 for Python 3, execute:
 
 ```
 find backtrader/lib/python3.9/site-packages/ib/ -name '*.py' -exec 2to3 -w {} \;
 ```
 
-## Run
-Note: This repo is still in development. The final product will run on a timed basis each day for backtesting.
+## Running the Code
+Note: This repository is under active development. The final implementation will support scheduled daily backtesting.
 
-### Backtesting (Current state)
-To run the backtesting navigate to ```alog_trading/backtest.py``` and run this file.
-You may also want to change the list of stocks/currencies you wish to backtest.
+### Backtesting (Current State)
+To perform backtesting, navigate to alog_trading/backtest.py and run the script:
 
-### Live Trading (Current state)
-The current state of live trading is NOT functioning properly.
+```
+python alog_trading/backtest.py
+```
 
-However, the final product will be running live collecting data from IBKR every 10 seconds. The chosen strategie/s will then be run on a continious basis.
+Feel free to customize the list of stocks or currencies for backtesting as needed.
+
+### Live Trading (Current State)
+Live trading functionality is currently not operational.
+
+In the final version, live trading will involve real-time data collection from Interactive Brokers (IBKR) every 10 seconds. The selected strategies will execute continuously based on this live data.
