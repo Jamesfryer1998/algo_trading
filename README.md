@@ -47,7 +47,7 @@ find backtrader/lib/python3.9/site-packages/ib/ -name '*.py' -exec 2to3 -w {} \;
 Note: This repository is under active development. The final implementation will support scheduled daily backtesting.
 
 ### Backtesting (Current State)
-To perform backtesting, navigate to alog_trading/backtest.py and run the script:
+To perform backtesting, navigate to ```alog_trading/backtest.py``` and run the script:
 
 ```
 python alog_trading/backtest.py
