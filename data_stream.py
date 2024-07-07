@@ -3,17 +3,17 @@ import pandas as pd
 from datetime import datetime
 import time
 import backtrader as bt
-from strategies.test_strategy import *
 
 
 class LiveData:
-    def __init__(self, ticker):
+    def __init__(self, ticker,  frequency):
         self.ticker = ticker
         self.ib = IB()
         self.connected = False
+        self.data_frame = pd.DataFrame(columns=['timestamp', 'price'])
+        self.frequency = frequency
 
     def fetch_forex_price(self, verbose=0):
-        print(f"Fetching price for {self.ticker}...")
         contract = Forex(self.ticker)
         self.ib.reqMktData(contract)
         ticker = self.ib.ticker(contract)
@@ -25,8 +25,6 @@ class LiveData:
 
         if price is None:
             print(f"Failed to fetch price for {self.ticker}")
-        else:
-            print(f"Fetched price for {self.ticker}: {price}")
         return price
 
     def connect(self):
@@ -49,77 +47,61 @@ class LiveData:
             try:
                 price = self.fetch_forex_price(verbose=1)
                 timestamp = datetime.now()
-                print(f"Yielding data - Timestamp: {timestamp}, Price: {price}")
+                new_data = {'timestamp': timestamp, 'price': price}
+
+                # Using pd.concat instead of deprecated append
+                new_df = pd.DataFrame([new_data])
+                self.data_frame = pd.concat([self.data_frame, new_df], ignore_index=True)
+                self.data_frame['price'] = self.data_frame['price'].astype(float)
+
+                if len(self.data_frame) >= 15:
+                    # Only start calculating RSI if we have more than one data point
+                    rsi_signal = RSIOverboughtOversoldStrategy(self.data_frame)
+                    print(f"Yielding data - Timestamp: {timestamp}, Price: {price}, Signal: {rsi_signal}")
+                elif len(self.data_frame) == 14:
+                    print(f"Yielding data - Timestamp: {timestamp}, Price: {price}, Starting on next run...")
+                else:
+                    print(f"Yielding data - Timestamp: {timestamp}, Price: {price}, Not enough data collected...")
+
                 yield timestamp, price
-                time.sleep(10)  # Adjust sleep duration for your requirements
+                time.sleep(self.frequency)  # Adjust sleep duration for your requirements
+            
             except Exception as e:
                 print(f"Error fetching live data: {e}")
-                time.sleep(10)  # Retry after a short delay in case of error
+                time.sleep(5)  # Retry after a short delay in case of error
+
         self.disconnect()
 
+def RSIOverboughtOversoldStrategy(data_frame, params=(14, 70, 30)):
+    rsi_period, rsi_overbought, rsi_oversold = params
 
+    # Calculate RSI
+    delta = data_frame['price'].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=rsi_period).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=rsi_period).mean()
+    rs = gain / loss
+    rsi = 100 - (100 / (1 + rs))
 
-class LiveDataFeed(bt.feeds.PandasData):
-    params = (
-        ('datetime', None),
-        ('open', -1),
-        ('high', -1),
-        ('low', -1),
-        ('close', -1),
-        ('volume', -1),
-        ('openinterest', -1),
-    )
+    data_frame['rsi'] = rsi
 
-    def __init__(self, live_data_gen):
-        self.live_data_gen = live_data_gen
-        print("Initializing LiveDataFeed with live data generator...")
-        super().__init__()
+    # Last RSI value
+    rsi_value = data_frame['rsi'].iloc[-1]
 
-    def start(self):
-        print("Starting LiveDataFeed...")
-        self.iter = iter(self.live_data_gen)
-        super().start()
-
-    def _load(self):
-        try:
-            timestamp, price = next(self.iter)
-            print(f"Loading data - Timestamp: {timestamp}, Price: {price}")
-            self.lines.datetime[0] = bt.date2num(timestamp)
-            self.lines.close[0] = price
-            self.lines.open[0] = price
-            self.lines.high[0] = price
-            self.lines.low[0] = price
-            self.lines.volume[0] = 0
-            self.lines.openinterest[0] = 0
-            return True
-        except StopIteration:
-            print("Live data generator exhausted.")
-            return False
-        except Exception as e:
-            print(f"Error in _load: {e}")
-            return False
+    if rsi_value >= rsi_overbought:
+        return 2  # Sell signal
+    elif rsi_value <= rsi_oversold:
+        return 1  # Buy signal
+    else:
+        return 0  # Hold signal
 
 
 def run_live_trading():
     print("Setting up live trading...")
-    cerebro = bt.Cerebro()
-
-    # Create and test the live data generator
-    live_data_gen = LiveData('EURUSD').get_live_data()
-    print("Live data generator created.")
-
-    # Add live data feed
-    live_data_feed = LiveDataFeed(dataname=pd.DataFrame(), live_data_gen=live_data_gen)
-    cerebro.adddata(live_data_feed)
-    print("Live data feed added to Cerebro.")
-
-    # Add strategy
-    cerebro.addstrategy(RSIOverboughtOversoldStrategy)
-    print("Strategy added to Cerebro.")
-
-    print("Starting Cerebro engine...")
-    cerebro.run()
-    print("Cerebro engine run completed.")
+    livedata = LiveData('GBPUSD', frequency=10)
+    data_gen = livedata.get_live_data()
+    for data in data_gen:
+        # Here you can use the live data and trading signal to execute trades
+        pass
 
 if __name__ == "__main__":
     run_live_trading()
