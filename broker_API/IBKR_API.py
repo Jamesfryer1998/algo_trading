@@ -3,16 +3,18 @@ import time
 
 class IBKR_API:
     def __init__(self, connection=None):
-        self.ib = IB()
-        self.connected = False
-        self.connection = connection
+        if connection == None:
+            self.ib = IB()
+            self.connected = False
+        else:
+            self.ib = connection
+            self.connected = True
 
     def connect(self, host='127.0.0.1', port=7497, clientId=1):
-        if self.connection == None:
-            if not self.connected:
-                print("Connecting to IBKR...")
-                self.ib.connect(host, port, clientId=clientId)
-                print('IBKR Connected')
+        if not self.connected:
+            print("Connecting to IBKR...")
+            self.ib.connect(host, port, clientId=clientId)
+            print('IBKR Connected')
 
         self.connected = True
 
@@ -32,7 +34,7 @@ class IBKR_API:
         :param quantity: float, number of units to buy or sell
         """
         if not self.connected:
-            raise Exception("Not connected to IBKR")
+            self.connect()
 
         contract = Forex(ticker)
         order = MarketOrder(action, quantity)
@@ -55,20 +57,20 @@ class IBKR_API:
         return self.place_order(ticker, 'SELL', quantity)
 
 
-def test_ibkr_api():
-    api = IBKR_API()
-    try:
-        api.connect()
+# def test_ibkr_api():
+#     api = IBKR_API()
+#     try:
+#         api.connect()
         
-        # Test buy and sell
-        api.buy('GBPUSD', 100)  # Buy 10,000 units of GBPUSD
-        time.sleep(5)  # Sleep for 5 seconds before next trade
-        api.sell('GBPUSD', 100)  # Sell 10,000 units of GBPUSD
+#         # Test buy and sell
+#         # api.buy('GBPUSD', 100)  # Buy 10,000 units of GBPUSD
+#         time.sleep(5)  # Sleep for 5 seconds before next trade
+#         api.sell('GBPUSD', 100)  # Sell 10,000 units of GBPUSD
         
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        api.disconnect()
+#     except Exception as e:
+#         print(f"Error: {e}")
+#     finally:
+#         api.disconnect()
 
-if __name__ == "__main__":
-    test_ibkr_api()
+# if __name__ == "__main__":
+#     test_ibkr_api()
