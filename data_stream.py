@@ -163,7 +163,3 @@ def run_live_trading():
 
 if __name__ == "__main__":
     run_live_trading()
-
-
-if __name__ == "__main__":
-    run_live_trading()
