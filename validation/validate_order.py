@@ -6,15 +6,18 @@ from datetime import datetime, timedelta
 
 
 class ValidateOrder:
-    def __init__(self, price, expected_price, order, num_orders_queued):
+    def __init__(self, filepath, price, expected_price, amount, expected_amount,  order, num_orders_queued):
+        self.filepath = filepath
         self.price = price
+        self.amount = amount
         self.expected_price = expected_price
+        self.expected_amount = expected_amount
         self.order = order
         self.num_orders_queued = num_orders_queued
         self.orderbook = self.load_orderbook()
 
     def load_orderbook(self):
-        orderbook = pd.read_csv('live_data/orderbook.csv')
+        orderbook = pd.read_csv(self.filepath)
         return orderbook
     
     def check_order_number(self):
@@ -30,9 +33,19 @@ class ValidateOrder:
             return False
 
     def price_in_range(self):
-        if self.price < self.expected_price * 0.9:
+        # Check is price is within a 5% tollerance of actual price
+        if self.price < self.expected_price * 0.95:
             return False
-        elif self.price > self.expected_price * 1.1:
+        elif self.price > self.expected_price * 1.05:
+            return False
+        else:
+            return True
+        
+    def amount_in_range(self):
+        # Check is amount is within a 5% tollerance of actual amount
+        if self.amount < self.expected_amount * 0.95:
+            return False
+        elif self.amount > self.expected_amount * 1.05:
             return False
         else:
             return True
@@ -54,8 +67,10 @@ class ValidateOrder:
         return True
 
     def run(self):
+        # Assume the worst too begin with
         result = False
         result = self.price_in_range()
+        result = self.amount_in_range()
         result = self.order_throttle()
 
         return result

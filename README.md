@@ -16,6 +16,16 @@ Welcome to the Algo Trading Python App! This application provides a platform for
 
 Configure your broker API credentials in the config.py file.
 
+# Implamanted so far
+- [x] Multiprocessed backtesting working thought tickers and strategies.
+- [x] Live Data Trading for chosen Ticker and Strategy.
+- [x] Order validation; Price and amount check, order throttle.
+- [ ] OrderBook validation; End of day OrderBook cross validation with Broker.
+- [ ] Interactive User Interface
+- [ ] Risk Management
+- [ ] Dashboard for Performance Metrics
+- [ ] Machine Learning strategy optimisation
+
 ## Usage Examples:
 ### Backtesting:
 Select a strategy from the available options.

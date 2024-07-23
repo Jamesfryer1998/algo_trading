@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 import time
 from broker_API.IBKR_API import IBKR_API  # Ensure the path is correct
+from live_data.orderbook import OrderBook
 
 
 class LiveData:
@@ -17,7 +18,7 @@ class LiveData:
         contract = Forex(self.ticker)
         self.ib.reqMktData(contract)
         ticker = self.ib.ticker(contract)
-        self.ib.sleep(2)  # Adjust sleep time based on your latency and data availability
+        # self.ib.sleep(2)
 
         price = ticker.marketPrice()
         if verbose == 1:
@@ -79,8 +80,8 @@ class LiveData:
         self.disconnect()
 
 
-
-def RSIOverboughtOversoldStrategy(data_frame, params=(14, 70, 30)):
+# Move this out to own file
+def RSIOverboughtOversoldStrategy(data_frame, params=(30, 75, 25)):
     rsi_period, rsi_overbought, rsi_oversold = params
 
     # Calculate RSI
@@ -105,16 +106,45 @@ def RSIOverboughtOversoldStrategy(data_frame, params=(14, 70, 30)):
 
 def run_live_trading():
     print("Setting up live trading...")
-    livedata = LiveData('GBPUSD', frequency=10)
+
+    # Setting up live trading with ticker
+    ticker = 'GBPUSD'
+    amount = 10000
+    livedata = LiveData(ticker, frequency=10)
     api = IBKR_API(livedata.ib)  # Pass the IB instance to IBKR_API
     data_gen = livedata.get_live_data()
+
+    order_book = OrderBook('live_data/data/OrderBook')
+
     for timestamp, price, rsi, signal in data_gen:
+        order = Order(
+            date=timestamp,
+            ticker=ticker,
+            price=price,
+            amount=amount,
+            signal='TBD',
+            strategy='RSI',  # Need to make live trading dynamic for the strategy passed in
+            status='Pending'  # Set initial status to Pending, will update after checking with IBKR
+        )
+
         if signal == 1:
-            api.buy('GBPUSD', 100)
+            api.buy(ticker, amount)
+            order.signal = 'BUY'
+            order.status = 'Filled'  # Update status based on IBKR response
+            order_book.add_order(order)
+            
         elif signal == 2:
-            api.sell('GBPUSD', 100)
+            api.sell(ticker, amount)
+            order.signal = 'SELL'
+            order.status = 'Filled'  # Update status based on IBKR response
+            order_book.add_order(order)
+
         else:
             pass
+
+if __name__ == "__main__":
+    run_live_trading()
+
 
 if __name__ == "__main__":
     run_live_trading()
