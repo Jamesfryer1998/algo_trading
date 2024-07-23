@@ -1,3 +1,6 @@
+# Validating local orderbook with IBKR orderbook
+# This is to check for failed orders, discrepencies in orders books. Also to save data for data vis and dashboard
+
 import pandas as pd
 from ib_insync import *
 from datetime import datetime
