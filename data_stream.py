@@ -116,7 +116,8 @@ def run_live_trading():
     api = IBKR_API(livedata.ib)  # Pass the IB instance to IBKR_API
     data_gen = livedata.get_live_data()
 
-    order_book = OrderBook('live_data/data/OrderBook')
+    orderbook_filepath = 'live_data/data/OrderBook'
+    orderbook = OrderBook(orderbook_filepath)
 
     for timestamp, price, rsi, signal in data_gen:
 
@@ -132,18 +133,30 @@ def run_live_trading():
         )
 
         # Validate Order
+        validator = ValidateOrder(
+            orderbook_filepath,
+            order,
+            expected_price=price, # This will change need some sort of secondary data stream to compare price againts. (Maybe pull from YFinance?) Free and Quick
+            expected_amount=amount,
+            num_orders_queued=1
+        )
+
+        result = validator.validate()
+
+        if result is False:
+            pass
 
         if signal == 1:
             api.buy(ticker, amount)
             order.signal = 'BUY'
             order.status = 'Filled'  # Update status based on IBKR response
-            order_book.add_order(order)
+            orderbook.add_order(order)
             
         elif signal == 2:
             api.sell(ticker, amount)
             order.signal = 'SELL'
             order.status = 'Filled'  # Update status based on IBKR response
-            order_book.add_order(order)
+            orderbook.add_order(order)
 
         else:
             pass
