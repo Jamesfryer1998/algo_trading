@@ -4,6 +4,8 @@ from datetime import datetime
 import time
 from broker_API.IBKR_API import IBKR_API  # Ensure the path is correct
 from live_data.orderbook import OrderBook
+from validation.validate_order import ValidateOrder
+from validation.validate_orderbook import ValidateOrder
 
 
 class LiveData:
@@ -117,6 +119,8 @@ def run_live_trading():
     order_book = OrderBook('live_data/data/OrderBook')
 
     for timestamp, price, rsi, signal in data_gen:
+
+        # Create order
         order = Order(
             date=timestamp,
             ticker=ticker,
@@ -126,6 +130,8 @@ def run_live_trading():
             strategy='RSI',  # Need to make live trading dynamic for the strategy passed in
             status='Pending'  # Set initial status to Pending, will update after checking with IBKR
         )
+
+        # Validate Order
 
         if signal == 1:
             api.buy(ticker, amount)

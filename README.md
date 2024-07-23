@@ -16,7 +16,7 @@ Welcome to the Algo Trading Python App! This application provides a platform for
 
 Configure your broker API credentials in the config.py file.
 
-# Implamanted so far
+# Implemented so far
 - [x] Multiprocessed backtesting working thought tickers and strategies.
 - [x] Live Data Trading for chosen Ticker and Strategy.
 - [x] Order validation; Price and amount check, order throttle.
@@ -66,6 +66,12 @@ python alog_trading/backtest.py
 Feel free to customize the list of stocks or currencies for backtesting as needed.
 
 ### Live Trading (Current State)
-Live trading functionality is currently not operational.
+Live trading functionality is not available!
+
+This is currently in developmen, but if you wish to run you will need the IBKR TWS open
+
+```
+python alog_trading/datastream.py
+```
 
 In the final version, live trading will involve real-time data collection from Interactive Brokers (IBKR) every 10 seconds. The selected strategies will execute continuously based on this live data.
