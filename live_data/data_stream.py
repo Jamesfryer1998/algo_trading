@@ -5,7 +5,7 @@ import time
 from broker_API.IBKR_API import IBKR_API  # Ensure the path is correct
 from live_data.orderbook import OrderBook
 from validation.validate_order import ValidateOrder
-from validation.validate_orderbook import ValidateOrder
+from validation.validate_orderbook import ValidateOrderBook
 
 
 class LiveData:
@@ -106,12 +106,12 @@ def RSIOverboughtOversoldStrategy(data_frame, params=(30, 75, 25)):
     return signal, rsi_value
 
 
-def run_live_trading():
+from datetime import datetime, time
+
+def run_live_trading(ticker, amount):
     print("Setting up live trading...")
 
     # Setting up live trading with ticker
-    ticker = 'GBPUSD'
-    amount = 10000
     livedata = LiveData(ticker, frequency=10)
     api = IBKR_API(livedata.ib)  # Pass the IB instance to IBKR_API
     data_gen = livedata.get_live_data()
@@ -119,47 +119,54 @@ def run_live_trading():
     orderbook_filepath = 'live_data/data/OrderBook'
     orderbook = OrderBook(orderbook_filepath)
 
-    for timestamp, price, rsi, signal in data_gen:
+    while True:
+        current_time = datetime.now().time()
+        start_time = time(6, 0)  # 6 AM
+        end_time = time(22, 0)   # 10 PM
 
-        # Create order
-        order = Order(
-            date=timestamp,
-            ticker=ticker,
-            price=price,
-            amount=amount,
-            signal='TBD',
-            strategy='RSI',  # Need to make live trading dynamic for the strategy passed in
-            status='Pending'  # Set initial status to Pending, will update after checking with IBKR
-        )
+        if start_time <= current_time <= end_time:
+            for timestamp, price, rsi, signal in data_gen:
+                # Create order
+                order = Order(
+                    date=timestamp,
+                    ticker=ticker,
+                    price=price,
+                    amount=amount,
+                    signal='TBD',
+                    strategy='RSI',  # Need to make live trading dynamic for the strategy passed in
+                    status='Pending'  # Set initial status to Pending, will update after checking with IBKR
+                )
 
-        # Validate Order
-        validator = ValidateOrder(
-            orderbook_filepath,
-            order,
-            expected_price=price, # This will change need some sort of secondary data stream to compare price againts. (Maybe pull from YFinance?) Free and Quick
-            expected_amount=amount,
-            num_orders_queued=1
-        )
+                # Validate Order
+                validator = ValidateOrder(
+                    orderbook_filepath,
+                    order,
+                    expected_price=price, # This will change need some sort of secondary data stream to compare price againts. (Maybe pull from YFinance?) Free and Quick
+                    expected_amount=amount,
+                    num_orders_queued=1
+                )
 
-        result = validator.validate()
+                result = validator.validate()
 
-        if result is False:
-            pass
+                if result is False:
+                    pass
 
-        if signal == 1:
-            api.buy(ticker, amount)
-            order.signal = 'BUY'
-            order.status = 'Filled'  # Update status based on IBKR response
-            orderbook.add_order(order)
-            
-        elif signal == 2:
-            api.sell(ticker, amount)
-            order.signal = 'SELL'
-            order.status = 'Filled'  # Update status based on IBKR response
-            orderbook.add_order(order)
+                if signal == 1:
+                    api.buy(ticker, amount)
+                    order.signal = 'BUY'
+                    order.status = 'Filled'  # Update status based on IBKR response
+                    orderbook.add_order(order)
+                    
+                elif signal == 2:
+                    api.sell(ticker, amount)
+                    order.signal = 'SELL'
+                    order.status = 'Filled'  # Update status based on IBKR response
+                    orderbook.add_order(order)
 
+                else:
+                    pass
         else:
-            pass
-
-if __name__ == "__main__":
-    run_live_trading()
+            print("Trading hours are over. Running orderbook validation...")
+            validator = ValidateOrderBook(orderbook_filepath)            
+            validator.validate()
+            break

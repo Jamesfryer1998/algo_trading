@@ -55,22 +55,3 @@ class IBKR_API:
 
     def sell(self, ticker, quantity):
         return self.place_order(ticker, 'SELL', quantity)
-
-
-# def test_ibkr_api():
-#     api = IBKR_API()
-#     try:
-#         api.connect()
-        
-#         # Test buy and sell
-#         # api.buy('GBPUSD', 100)  # Buy 10,000 units of GBPUSD
-#         time.sleep(5)  # Sleep for 5 seconds before next trade
-#         api.sell('GBPUSD', 100)  # Sell 10,000 units of GBPUSD
-        
-#     except Exception as e:
-#         print(f"Error: {e}")
-#     finally:
-#         api.disconnect()
-
-# if __name__ == "__main__":
-#     test_ibkr_api()

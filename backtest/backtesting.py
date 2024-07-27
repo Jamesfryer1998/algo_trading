@@ -82,7 +82,4 @@ def run_backtest():
     file_name = os.path.join(file_path, f"{today_date}.csv")
 
     profitable_df.to_csv(file_name, index=False)
-
-if __name__ == "__main__":
-    run_backtest()
     send_email("jamesfryer1998@gmail.com", "Backtesting complete", "Complete")

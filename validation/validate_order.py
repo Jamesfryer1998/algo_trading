@@ -82,6 +82,7 @@ class ValidateOrder:
         result = self.order_throttle()
 
         if result == False:
+            print("Order not valid...")
             print (self.result)
 
         return result

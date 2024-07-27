@@ -100,10 +100,3 @@ class ValidateOrderBook:
         self.connect()
         self.compare_orderbook()
         self.disconnect()
-
-
-# Example usage
-if __name__ == "__main__":
-    validator = ValidateOrderBook('live_data/data/OrderBook.csv')
-    print(validator.get_filled_orders())
-    # validator.validate()
