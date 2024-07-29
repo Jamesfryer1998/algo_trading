@@ -1,0 +1,4 @@
+{
+    "tickers":["NVDA", "AAPL", "AMZN", "GOOGL"],
+    "forex":["USD", "JPY", "LEV", "AUD", "CHF", "CAD", "GBP", "HKD", "NZD", "KRW"]
+}
