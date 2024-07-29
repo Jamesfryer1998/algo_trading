@@ -1,6 +1,8 @@
 import yagmail
+from utils.json_tools import *
 
-user = yagmail.SMTP(user='pythonemail1998@gmail.com', password='pwbyekrozdhzkqrz')
+password = load_json("utils/secrets.json")['gmail_password']
+user = yagmail.SMTP(user='pythonemail1998@gmail.com', password=password)
 
 def send_email(recipient, emg_subject, emg_content, attachments=None):
     contents = [emg_content]
