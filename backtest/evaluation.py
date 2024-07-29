@@ -12,7 +12,6 @@ class Evaluation:
 
     def load_data(self):
         end_date = datetime.today().date()
-
         df_list = []
         for i in range(self.num_days):
             date = (end_date - timedelta(days=i)).strftime("%d-%m-%Y")
@@ -21,7 +20,7 @@ class Evaluation:
                 df = pd.read_csv(file_path)
                 df['date'] = pd.to_datetime(df['date'])
                 df_list.append(df)
-
+        
         if df_list:
             self.df = pd.concat(df_list, ignore_index=True)
             self.df.sort_values(by='date', inplace=True)
@@ -32,18 +31,15 @@ class Evaluation:
     def plot_average_pnl(self):
         if self.df.empty:
             self.load_data()
-
         if not self.df.empty:
             # Aggregate data by strategy and date, taking the average of pnl values
             aggregated_data = self.df.groupby(['date', 'strategy'])['pnl'].mean().reset_index()
-
             for strategy in aggregated_data['strategy'].unique():
                 strategy_data = aggregated_data[aggregated_data['strategy'] == strategy]
                 plt.plot(strategy_data['date'], strategy_data['pnl'], marker='o', label=strategy)
-
             self.configure_plot(f'Average PnL for Different Strategies (Last {self.num_days} Days)')
-            self.save_and_send_plot('average_pnl_plot.png', 'Average PnL Plot')
-            self.delete_saved_plot('average_pnl_plot.png')
+            self.save_plot('average_pnl_plot.png')
+            plt.close()
 
     def plot_ticker_pnl(self, ticker):
         if self.df.empty:
@@ -56,8 +52,27 @@ class Evaluation:
                 plt.plot(data['date'], data['pnl'], marker='o', label=strategy)
 
             self.configure_plot(f'{ticker} PnL for Different Strategies (Last {self.num_days} Days)')
-            self.save_and_send_plot(f'{ticker}_pnl_plot.png', f'{ticker} PnL Plot')
-            self.delete_saved_plot(f'{ticker}_pnl_plot.png')
+            self.save_plot(f'{ticker}_pnl_plot.png')
+            plt.close()
+
+
+    def best_performing_stocks(self):
+        if self.df.empty:
+            self.load_data()
+        if not self.df.empty:
+            best_stocks = self.df.groupby('ticker')['pnl'].mean().nlargest(5).reset_index()
+            print("Best Performing Stocks:")
+            print(best_stocks)
+            return best_stocks
+
+    def worst_performing_stocks(self):
+        if self.df.empty:
+            self.load_data()
+        if not self.df.empty:
+            worst_stocks = self.df.groupby('ticker')['pnl'].mean().nsmallest(5).reset_index()
+            print("Worst Performing Stocks:")
+            print(worst_stocks)
+            return worst_stocks
 
     def configure_plot(self, title):
         plt.xlabel('Date')
@@ -71,25 +86,46 @@ class Evaluation:
         plt.xlim(min_date, max_date)
         plt.xticks(rotation=45)
 
-    def save_and_send_plot(self, image_path, plot_title):
-        plt.savefig(image_path)  # Save the plot before showing it
-        plt.show()  # Display the plot
-        plt.close()
+    def save_plot(self, image_path):
+        plt.savefig(image_path)
+
+    def send_summary_email(self):
+        self.load_data()
+        if self.df.empty:
+            print("No data available for summary.")
+            return
+
+        # Generate and save plots
+        self.plot_average_pnl()
+        best_stocks = self.best_performing_stocks()
+        worst_stocks = self.worst_performing_stocks()
+
+        # Prepare email content
+        best_stocks_str = best_stocks.to_string(index=False)
+        worst_stocks_str = worst_stocks.to_string(index=False)
+        
+        content = f"""
+        Please find the attached summary of the backtesting results for the last {self.num_days} days.
+
+        Average PnL Plot is attached as 'average_pnl_plot.png'.
+
+        Best Performing Stocks:
+        {best_stocks_str}
+
+        Worst Performing Stocks:
+        {worst_stocks_str}
+        """
+        attachments = ['average_pnl_plot.png']
+
         recipient = "jamesfryer1998@gmail.com"
-        subject = f'{plot_title} - Backtesting Results'
-        content = f'Please find the attached plot of the {plot_title}.'
-        send_email(recipient, subject, content, image_path)
+        subject = 'Backtesting Results Summary'
+        send_email(recipient, subject, content, attachments)
+
+        # Delete the plot file after sending the email
+        self.delete_saved_plot('average_pnl_plot.png')
 
     def delete_saved_plot(self, image_path):
         if os.path.exists(image_path):
             os.remove(image_path)
         else:
             print("The file does not exist.")
-
-# # Example usage
-# if __name__ == "__main__":
-#     data_dir = '/Users/james/Projects/algo_trading/backtest/data'
-#     num_days = 30  # Number of days to go back
-#     evaluation = Evaluation(data_dir, num_days)
-#     evaluation.plot_average_pnl()
-#     evaluation.plot_ticker_pnl('AAPL')

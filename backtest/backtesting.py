@@ -5,6 +5,8 @@ import pandas as pd
 from utils.gmailer import send_email
 import os
 import multiprocessing as mp
+from backtest.evaluation import *
+
 
 list_strats = [TestStrategy, 
                MAcrossover, 
@@ -66,8 +68,19 @@ def strategy_to_string(strategy):
         return "RSIOverboughtOversoldStrategy"
     if strategy == TestStrategy:
         return "RSIOverboughtOversoldStrategy"
+    
+def evaluate(num_days, type, ticker=None):
+    data_dir = 'backtest/data'
+    evaluation = Evaluation(data_dir, num_days)
+    if type == "average":
+        evaluation.plot_average_pnl()
+    elif type == "ticker":
+        evaluation.plot_ticker_pnl(ticker)
+    elif type == "all":
+        evaluation.send_summary_email()
 
-def run_backtest():
+
+def run_backtest(send_email=False):
     combinations = generate_combinations(list_strats, tickers, currencies, time)
     
     with mp.Pool(processes=mp.cpu_count()) as pool:
@@ -82,4 +95,5 @@ def run_backtest():
     file_name = os.path.join(file_path, f"{today_date}.csv")
 
     profitable_df.to_csv(file_name, index=False)
-    send_email("jamesfryer1998@gmail.com", "Backtesting complete", "Complete")
+    if send_email:
+        send_email("jamesfryer1998@gmail.com", "Backtesting complete", "Complete")
