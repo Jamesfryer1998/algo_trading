@@ -120,6 +120,7 @@ class Evaluation:
         recipient = "jamesfryer1998@gmail.com"
         subject = 'Backtesting Results Summary'
         send_email(recipient, subject, content, attachments)
+        print(f"Email sent to: {recipient}")
 
         # Delete the plot file after sending the email
         self.delete_saved_plot('average_pnl_plot.png')

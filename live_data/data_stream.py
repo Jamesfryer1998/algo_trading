@@ -1,9 +1,9 @@
 from ib_insync import *
 import pandas as pd
-from datetime import datetime
-import time
-from broker_API.IBKR_API import IBKR_API  # Ensure the path is correct
-from live_data.orderbook import OrderBook
+from datetime import datetime, time
+import time as t
+from broker_API.IBKR_API import IBKR_API
+from live_data.orderbook import OrderBook, Order
 from validation.validate_order import ValidateOrder
 from validation.validate_orderbook import ValidateOrderBook
 
@@ -14,13 +14,13 @@ class LiveData:
         self.ib = IB()
         self.connected = False
         self.data_frame = pd.DataFrame(columns=['timestamp', 'price'])
-        self.frequency = frequency
+        self.frequency = frequency - 1
 
     def fetch_forex_price(self, verbose=0):
         contract = Forex(self.ticker)
         self.ib.reqMktData(contract)
         ticker = self.ib.ticker(contract)
-        # self.ib.sleep(2)
+        self.ib.sleep(1)
 
         price = ticker.marketPrice()
         if verbose == 1:
@@ -58,7 +58,11 @@ class LiveData:
                 new_data = {'timestamp': timestamp, 'price': price}
 
                 new_df = pd.DataFrame([new_data])
-                self.data_frame = pd.concat([self.data_frame, new_df], ignore_index=True)
+                if not self.data_frame.empty:
+                    self.data_frame = pd.concat([self.data_frame, new_df], ignore_index=True)
+                else:
+                    self.data_frame = new_df
+
                 self.data_frame['price'] = self.data_frame['price'].astype(float)
 
                 rsi_signal, rsi_value = None, None
@@ -73,11 +77,11 @@ class LiveData:
                     print(f"Yielding data - Timestamp: {timestamp}, Price: {price}, Not enough data collected...")
 
                 yield timestamp, price, rsi_value, rsi_signal
-                time.sleep(self.frequency)  # Adjust sleep duration for your requirements
+                t.sleep(self.frequency)  # Adjust sleep duration for your requirements
 
             except Exception as e:
                 print(f"Error fetching live data: {e}")
-                time.sleep(5)  # Retry after a short delay in case of error
+                t.sleep(self.frequency)  # Retry after a short delay in case of error
 
         self.disconnect()
 
@@ -105,8 +109,6 @@ def RSIOverboughtOversoldStrategy(data_frame, params=(30, 75, 25)):
 
     return signal, rsi_value
 
-
-from datetime import datetime, time
 
 def run_live_trading(ticker, amount):
     print("Setting up live trading...")

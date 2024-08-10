@@ -16,13 +16,23 @@ class ValidateOrder:
         self.num_orders_queued = num_orders_queued
         self.orderbook = self.load_orderbook()
         self.reason = "Order Valid"
-
+    
     def load_orderbook(self):
-        orderbook = pd.read_csv(self.filepath)
-        return orderbook
+        """
+        Load the orderbook from a CSV file.
+        :return: pd.DataFrame, the loaded orderbook data
+        """
+        try:
+            df = pd.read_csv(self.filepath)
+        except FileNotFoundError:
+            df = pd.DataFrame(columns=['Date', 'Ticker', 'Price', 'Amount', 'Signal', 'Strategy', 'Status'])
+        return df
     
     def check_order_number(self):
         df = self.orderbook
+        if len(df) == 0:
+            return False
+        
         latest_date = pd.to_datetime(df.iloc[0]['Date'])
         time_delta = latest_date - timedelta(seconds=10)
         mask = (df['date'] > time_delta) & (df['date'] <= time_delta)
