@@ -110,8 +110,8 @@ def RSIOverboughtOversoldStrategy(data_frame, params=(30, 75, 25)):
     return signal, rsi_value
 
 
-def run_live_trading(ticker, amount):
-    print("Setting up live trading...")
+def run_live_trading(ticker, amount, broker):
+    print(f"Setting up live trading on {broker}...")
 
     # Setting up live trading with ticker
     livedata = LiveData(ticker, frequency=10)

@@ -1,29 +1,47 @@
 from ib_insync import *
 import time
 
+
 class IBKR_API:
-    def __init__(self, connection=None):
-        if connection == None:
-            self.ib = IB()
-            self.connected = False
-        else:
-            self.ib = connection
-            self.connected = True
+    def __init__(self):
+        self.ib = IB()
+        self.connected = False
+        self.connect()
 
     def connect(self, host='127.0.0.1', port=7497, clientId=1):
         if not self.connected:
-            print("Connecting to IBKR...")
-            self.ib.connect(host, port, clientId=clientId)
-            print('IBKR Connected')
-
-        self.connected = True
+            try:
+                print("Connecting to IBKR...")
+                self.ib.connect(host, port, clientId=clientId)
+                self.connected = True
+                print('IBKR Connected')
+            except Exception as e:
+                print(f"Connection failed: {e}")
+                self.connected = False
 
     def disconnect(self):
         if self.connected:
-            print("Disconnecting from IBKR...")
-            self.ib.disconnect()
-            print('IBKR Disconnected')
-            self.connected = False
+            try:
+                print("Disconnecting from IBKR...")
+                self.ib.disconnect()
+                self.connected = False
+                print('IBKR Disconnected')
+            except Exception as e:
+                print(f"Disconnection failed: {e}")
+
+    def is_connected(self):
+        try:
+            # Use ib.isConnected() to check the connection status
+            if self.ib.isConnected():
+                return True
+            else:
+                # If isConnected returns False, try to reconnect
+                self.connect()
+                return self.connected
+        except Exception as e:
+            print(f"Error checking connection status: {e}")
+            return False
+
 
     def place_order(self, ticker, action, quantity):
         """

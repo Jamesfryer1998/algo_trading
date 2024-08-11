@@ -1,7 +1,9 @@
 import tkinter as tk
+from tkinter import ttk
 import sys
 from live_data.data_stream import run_live_trading
 from backtest.backtesting import Backtester
+from broker_API.IBKR_API import IBKR_API
 
 class RedirectText(object):
     def __init__(self, text_widget):
@@ -17,41 +19,107 @@ class RedirectText(object):
 class TradingInterface:
     def __init__(self, root):
         self.root = root
-        self.initialise()   
+        self.api = IBKR_API()
+        self.initial_window_size = "1000x600"  # Set initial window size to accommodate terminal
+        self.initialise()
 
-    def initialise(self ):
+    def initialise(self):
         self.root.title("Trading Interface")
-        # Define window sizes
-        self.window_with_terminal = "800x400"
-        self.window_without_terminal = "400x400"
+        self.root.geometry(self.initial_window_size)  # Initial window size
 
-        self.root.geometry(self.window_with_terminal)  # Set the initial window size
+        # Create the left frame for the tabs and button
+        self.left_frame = tk.Frame(self.root)
+        self.left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
 
-        self.button_frame = tk.Frame(self.root)
-        self.button_frame.pack(side=tk.LEFT, padx=10, pady=10)
+        # Create the Notebook widget for tabs
+        self.notebook = ttk.Notebook(self.left_frame)
+        self.notebook.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
+        # Create a frame for each tab
+        self.backtest_frame = ttk.Frame(self.notebook)
+        self.evaluate_frame = ttk.Frame(self.notebook)
+        self.live_trade_frame = ttk.Frame(self.notebook)
+
+        # Add tabs to the Notebook
+        self.notebook.add(self.backtest_frame, text="Backtest")
+        self.notebook.add(self.evaluate_frame, text="Evaluation")
+        self.notebook.add(self.live_trade_frame, text="Live Trading")
+
+        # Initialize each tab with its content
+        self.init_backtest_tab()
+        self.init_evaluation_tab()
+        self.init_live_trade_tab()
+
+        # Add Toggle Terminal button under the Notebook in the left_frame
+        self.toggle_terminal_button = tk.Button(self.left_frame, text="Toggle Terminal", command=self.toggle_terminal)
+        self.toggle_terminal_button.pack(side=tk.TOP, pady=10)
+
+        # Create terminal frame at the bottom (initially visible)
         self.terminal_frame = tk.Frame(self.root)
-        self.terminal_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-        button_width = 20
-        button_height = 3
-
-        backtest_button = tk.Button(self.button_frame, text="Backtest", command=self.run_backtest, width=button_width, height=button_height)
-        backtest_button.pack(pady=10)
-
-        evaluate_button = tk.Button(self.button_frame, text="Evaluate", command=self.evaluate_backtest, width=button_width, height=button_height)
-        evaluate_button.pack(pady=10)
-
-        live_trade_button = tk.Button(self.button_frame, text="Live Trade", command=self.live_trade, width=button_width, height=button_height)
-        live_trade_button.pack(pady=10)
-
-        self.toggle_terminal_button = tk.Button(self.button_frame, text="Toggle Terminal", command=self.toggle_terminal, width=10, height=2)
-        self.toggle_terminal_button.pack(side=tk.BOTTOM, pady=10)
-
-        self.terminal_text = tk.Text(self.terminal_frame, wrap=tk.WORD)
+        self.terminal_text = tk.Text(self.terminal_frame, wrap=tk.WORD, height=10)
         self.terminal_text.pack(fill=tk.BOTH, expand=True)
 
+        # Redirect stdout to the terminal text widget
         sys.stdout = RedirectText(self.terminal_text)
+
+        # Pack the terminal frame so it's visible on startup
+        self.terminal_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # Start the periodic connection status check
+        self.update_connection_status()
+
+    def init_backtest_tab(self):
+        run_button = tk.Button(self.backtest_frame, text="Run Backtest", command=self.run_backtest)
+        run_button.pack(side=tk.BOTTOM, pady=20, padx=20)
+
+    def init_evaluation_tab(self):
+        tk.Label(self.evaluate_frame, text="Select Evaluation Type:").pack(pady=10)
+
+        self.eval_type_var = tk.StringVar(value="Average")
+        eval_type_dropdown = ttk.Combobox(self.evaluate_frame, textvariable=self.eval_type_var)
+        eval_type_dropdown['values'] = ("Average", "Ticker", "All")
+        eval_type_dropdown.pack(pady=10)
+
+        self.symbol_entry_frame = None
+
+        def on_eval_type_change(event):
+            if self.symbol_entry_frame:
+                self.symbol_entry_frame.destroy()
+                self.symbol_entry_frame = None
+
+            if self.eval_type_var.get() == "Ticker":
+                self.symbol_entry_frame = tk.Frame(self.evaluate_frame)
+                self.symbol_entry_frame.pack(pady=10)
+                tk.Label(self.symbol_entry_frame, text="Enter Ticker Symbol:").pack(pady=5)
+                self.symbol_entry = tk.Entry(self.symbol_entry_frame)
+                self.symbol_entry.pack(pady=5)
+
+        eval_type_dropdown.bind("<<ComboboxSelected>>", on_eval_type_change)
+
+        run_button = tk.Button(self.evaluate_frame, text="Run Evaluation", command=self.evaluate_backtest)
+        run_button.pack(side=tk.BOTTOM, pady=20, padx=20)
+
+    def init_live_trade_tab(self):
+        tk.Label(self.live_trade_frame, text="Enter Ticker:").pack(pady=10)
+        self.ticker_entry = tk.Entry(self.live_trade_frame)
+        self.ticker_entry.pack(pady=10)
+
+        tk.Label(self.live_trade_frame, text="Enter Amount:").pack(pady=10)
+        self.amount_entry = tk.Entry(self.live_trade_frame)
+        self.amount_entry.pack(pady=10)
+
+        tk.Label(self.live_trade_frame, text="Select Broker:").pack(pady=10)
+        self.broker_var = tk.StringVar(value="IBKR")
+        broker_dropdown = ttk.Combobox(self.live_trade_frame, textvariable=self.broker_var)
+        broker_dropdown['values'] = ("IBKR",)
+        broker_dropdown.pack(pady=10)
+
+        run_button = tk.Button(self.live_trade_frame, text="Start Live Trading", command=self.live_trade)
+        run_button.pack(side=tk.BOTTOM, pady=20, padx=20)
+
+        # Status label for connection status
+        self.status_label = tk.Label(self.root, text="Disconnected", bg="red", fg="white", width=20)
+        self.status_label.pack(pady=10)
 
     def run_backtest(self):
         backtest = Backtester()
@@ -59,22 +127,38 @@ class TradingInterface:
 
     def evaluate_backtest(self):
         backtest = Backtester()
-        backtest.evaluate(30, "all")
+        eval_type = self.eval_type_var.get()
+
+        if eval_type == "Ticker" and self.symbol_entry_frame:
+            symbol = self.symbol_entry.get()
+            backtest.evaluate(30, "ticker", ticker=symbol)
+        else:
+            backtest.evaluate(30, eval_type.lower())
 
     def live_trade(self):
-        run_live_trading("GBPUSD", 10000)
+        ticker = self.ticker_entry.get()
+        amount = float(self.amount_entry.get())
+        broker = self.broker_var.get()
+        run_live_trading(ticker, amount, broker=broker)
 
     def toggle_terminal(self):
-        if self.terminal_frame.winfo_viewable():
+        if self.terminal_frame.winfo_ismapped():
             self.terminal_frame.pack_forget()
-            self.toggle_terminal_button.pack_forget()
-            self.toggle_terminal_button.pack(side=tk.BOTTOM, pady=10)
-            self.root.geometry(self.window_without_terminal)
+            self.root.geometry("380x600")  # Resize window without terminal
         else:
-            self.terminal_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
-            self.toggle_terminal_button.pack_forget()
-            self.toggle_terminal_button.pack(in_=self.terminal_frame, side=tk.BOTTOM, pady=10)
-            self.root.geometry(self.window_with_terminal)
+            self.terminal_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, padx=10, pady=10)
+            self.root.geometry("1000x600")  # Resize window with terminal
+
+    def update_connection_status(self):
+        # Update the connection status
+        if self.api.is_connected():
+            self.status_label.config(text="Connected", bg="green")
+        else:
+            self.status_label.config(text="Disconnected", bg="red")
+
+        # Schedule the next update in 2 seconds
+        self.root.after(5000, self.update_connection_status)
+
 
 def run_interface():
     root = tk.Tk()
