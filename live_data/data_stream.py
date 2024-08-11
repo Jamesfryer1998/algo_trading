@@ -115,7 +115,7 @@ def run_live_trading(ticker, amount, broker):
 
     # Setting up live trading with ticker
     livedata = LiveData(ticker, frequency=10)
-    api = IBKR_API(livedata.ib)  # Pass the IB instance to IBKR_API
+    api = IBKR_API(livedata.ib)
     data_gen = livedata.get_live_data()
 
     orderbook_filepath = 'live_data/data/OrderBook'

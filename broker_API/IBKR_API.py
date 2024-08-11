@@ -3,10 +3,18 @@ import time
 
 
 class IBKR_API:
-    def __init__(self):
-        self.ib = IB()
-        self.connected = False
-        self.connect()
+    def __init__(self, connection=None):
+        if connection == None:
+            self.ib = IB()
+            self.connected = False
+        else:
+            self.ib = connection
+            self.connected = True
+        
+        # self.ib = connection
+        # self.connected = True
+        # self.connect()
+
 
     def connect(self, host='127.0.0.1', port=7497, clientId=1):
         if not self.connected:
@@ -38,6 +46,7 @@ class IBKR_API:
                 # If isConnected returns False, try to reconnect
                 self.connect()
                 return self.connected
+            
         except Exception as e:
             print(f"Error checking connection status: {e}")
             return False

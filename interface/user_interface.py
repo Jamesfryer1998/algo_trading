@@ -20,7 +20,8 @@ class TradingInterface:
     def __init__(self, root):
         self.root = root
         self.api = IBKR_API()
-        self.initial_window_size = "1000x600"  # Set initial window size to accommodate terminal
+        self.initial_window_size = "1000x600"
+        self.without_terminal_size = "380x600"
         self.initialise()
 
     def initialise(self):
@@ -144,10 +145,10 @@ class TradingInterface:
     def toggle_terminal(self):
         if self.terminal_frame.winfo_ismapped():
             self.terminal_frame.pack_forget()
-            self.root.geometry("380x600")  # Resize window without terminal
+            self.root.geometry(self.without_terminal_size)
         else:
             self.terminal_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, padx=10, pady=10)
-            self.root.geometry("1000x600")  # Resize window with terminal
+            self.root.geometry(self.initial_window_size)
 
     def update_connection_status(self):
         # Update the connection status
