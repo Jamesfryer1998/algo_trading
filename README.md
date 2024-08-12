@@ -27,6 +27,7 @@ Configure your broker API credentials in the config.py file.
 - [ ] Risk Management
 - [ ] Dashboard for Performance Metrics
 - [ ] Machine Learning strategy optimisation
+- [ ] Scheduled Backtesting
 
 ## Usage Examples:
 ### Backtesting:
