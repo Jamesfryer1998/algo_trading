@@ -2,6 +2,8 @@
 
 Welcome to the Algo Trading Python App! This application provides a platform for implementing and testing various algorithmic trading strategies. Below is a brief overview of its key features and functionalities.
 
+![screenshot](user_interface_screenshot.png)
+
 ## Features:
 ### Strategies:
 - Implement and test a wide range of trading strategies, from simple moving averages to advanced machine learning algorithms.
