@@ -21,7 +21,7 @@ Configure your broker API credentials in the config.py file.
 - [x] Live Data Trading for chosen Ticker and Strategy.
 - [x] Order validation; Price and amount check, order throttle.
 - [ ] OrderBook validation; End of day OrderBook cross validation with Broker.
-- [ ] Interactive User Interface
+- [x] Interactive User Interface
 - [ ] Risk Management
 - [ ] Dashboard for Performance Metrics
 - [ ] Machine Learning strategy optimisation
@@ -54,13 +54,43 @@ find backtrader/lib/python3.9/site-packages/ib/ -name '*.py' -exec 2to3 -w {} \;
 ```
 
 ## Running the Code
+There are currently two ways to run this app, from the user interface or from the main.py (for running each feature separetly)
+
+### User Interface
+The user interface is currently under development and is therefore very simple and straightforward. To run the user interface simply run ```alog_trading/main.py```
+
+Once in the interface you will see something like this:
+
+![screenshot](user_interface_screenshot.png)
+
+
+### Running from main.py
 Note: This repository is under active development. The final implementation will support scheduled daily backtesting.
 
 ### Backtesting (Current State)
-To perform backtesting, navigate to ```alog_trading/backtest.py``` and run the script:
+To perform backtesting, comment back in the following and run ```main.py```:
+
 
 ```
-python alog_trading/backtest.py
+    # backtest = Backtester()
+    # backtest.run_backtest()
+```
+
+Feel free to customize the list of stocks or currencies for backtesting as needed.
+
+### Evaluation (Current State)
+To perform an evaluation of your backtesting, there are a few steps to follow.
+
+1. Create a ```utils/secrets.json```
+2. Enter your email and email api password
+3. Comment back in the following in ```main.py```:
+
+30 denotes the number of days to look back over. And the following evaluation methods can be used:
+
+```
+    # backtest.evaluate(30, "all")
+    # backtest.evaluate(10, "average")
+    # backtest.evaluate(15, "ticker", "AAPL")
 ```
 
 Feel free to customize the list of stocks or currencies for backtesting as needed.
@@ -68,10 +98,10 @@ Feel free to customize the list of stocks or currencies for backtesting as neede
 ### Live Trading (Current State)
 Live trading functionality is not available!
 
-This is currently in developmen, but if you wish to run you will need the IBKR TWS open
+This is currently in development, but if you wish to run you will need the IBKR TWS open and comment back the following in ```main.py```:
 
 ```
-python alog_trading/datastream.py
+    # run_live_trading("GBPUSD", 10000, "IBKR", api)
 ```
 
 In the final version, live trading will involve real-time data collection from Interactive Brokers (IBKR) every 10 seconds. The selected strategies will execute continuously based on this live data.
