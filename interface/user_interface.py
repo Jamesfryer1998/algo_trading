@@ -4,6 +4,8 @@ import sys
 from live_data.data_stream import run_live_trading
 from backtest.backtesting import Backtester
 from broker_API.IBKR_API import IBKR_API
+import threading
+
 
 class RedirectText(object):
     def __init__(self, text_widget):
@@ -17,11 +19,13 @@ class RedirectText(object):
         pass
 
 class TradingInterface:
-    def __init__(self, root):
+    def __init__(self, root, api):
         self.root = root
-        self.api = IBKR_API()
+        self.api = api
         self.initial_window_size = "1000x600"
         self.without_terminal_size = "380x600"
+        self.stop_event = threading.Event()
+        self.trading_thread = None
         self.initialise()
 
     def initialise(self):
@@ -116,7 +120,10 @@ class TradingInterface:
         broker_dropdown.pack(pady=10)
 
         run_button = tk.Button(self.live_trade_frame, text="Start Live Trading", command=self.live_trade)
-        run_button.pack(side=tk.BOTTOM, pady=20, padx=20)
+        run_button.pack(side=tk.LEFT, pady=20, padx=20)
+
+        stop_button = tk.Button(self.live_trade_frame, text="Stop Live Trading", command=self.stop_live_trade)
+        stop_button.pack(side=tk.RIGHT, pady=20, padx=20)
 
         # Status label for connection status
         self.status_label = tk.Label(self.root, text="Disconnected", bg="red", fg="white", width=20)
@@ -136,11 +143,32 @@ class TradingInterface:
         else:
             backtest.evaluate(30, eval_type.lower())
 
+
+
     def live_trade(self):
+        self.stop_event.clear()  # Clear the stop event before starting
+
         ticker = self.ticker_entry.get()
-        amount = float(self.amount_entry.get())
+        amount = self.amount_entry.get()
         broker = self.broker_var.get()
-        run_live_trading(ticker, amount, broker=broker)
+
+        if not ticker or not amount or not broker:
+            print("Please fill in all the fields before starting live trading.")
+            return
+
+        try:
+            amount = float(amount)
+        except ValueError:
+            print("Amount must be a number.")
+            return
+
+        # Run the live trading in a separate thread
+        self.trading_thread = threading.Thread(target=run_live_trading, args=(ticker, amount, broker, self.api, self.stop_event))
+        self.trading_thread.start()
+
+    def stop_live_trade(self):
+        self.stop_event.set()  # Set the stop event to signal the thread to stop
+        print("Stop signal sent for live trading.")
 
     def toggle_terminal(self):
         if self.terminal_frame.winfo_ismapped():
@@ -161,7 +189,7 @@ class TradingInterface:
         self.root.after(5000, self.update_connection_status)
 
 
-def run_interface():
+def run_interface(api):
     root = tk.Tk()
-    app = TradingInterface(root)
+    app = TradingInterface(root, api)
     root.mainloop()

@@ -10,11 +10,12 @@ class IBKR_API:
         else:
             self.ib = connection
             self.connected = True
+
+        self.disconnect()
+        self.connect()
         
         # self.ib = connection
         # self.connected = True
-        # self.connect()
-
 
     def connect(self, host='127.0.0.1', port=7497, clientId=1):
         if not self.connected:
