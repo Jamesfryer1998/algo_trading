@@ -40,7 +40,7 @@ class LiveData:
 
         while True:
             try:
-                price = self.fetch_forex_price(verbose=1)
+                price = self.fetch_forex_price()
                 timestamp = datetime.now()
                 new_data = {'timestamp': timestamp, 'price': price}
 
@@ -97,8 +97,15 @@ def RSIOverboughtOversoldStrategy(data_frame, params=(30, 75, 25)):
     return signal, rsi_value
 
 
-def run_live_trading(ticker, amount, broker, api, stop_event=stop_event):
+def run_live_trading(ticker, amount, broker, api, stop_event=None, update_ui_callback=None):
     print(f"Setting up live trading on {broker}...")
+
+    if stop_event is None:
+        stop_event = threading.Event()  # Create a stop event if none is provided
+
+    if update_ui_callback is None:
+        # Define a default dummy callback if none is provided
+        update_ui_callback = lambda price: print(f"Price updated: {price}")
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -118,6 +125,9 @@ def run_live_trading(ticker, amount, broker, api, stop_event=stop_event):
             for timestamp, price, rsi, signal in data_gen:
                 if stop_event.is_set():
                     break  # Exit the loop if stop_event is set
+
+                # Update the UI with the latest price
+                update_ui_callback(price)
 
                 # Create order
                 order = Order(
@@ -165,4 +175,7 @@ def run_live_trading(ticker, amount, broker, api, stop_event=stop_event):
             break
 
     print("Live trading stopped.")
-    api.disconnect()   # Ensure the connection is closed properly
+    api.disconnect()
+
+
+
