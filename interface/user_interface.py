@@ -1,10 +1,10 @@
+import sys
+import threading
 import tkinter as tk
 from tkinter import ttk
-import sys
-from live_data.data_stream import run_live_trading
-from backtest.backtesting import Backtester
 from broker_API.IBKR_API import IBKR_API
-import threading
+from backtest.backtesting import Backtester
+from live_data.data_stream import run_live_trading
 
 
 class RedirectText(object):
@@ -108,10 +108,12 @@ class TradingInterface:
         tk.Label(self.live_trade_frame, text="Enter Ticker:").pack(pady=10)
         self.ticker_entry = tk.Entry(self.live_trade_frame)
         self.ticker_entry.pack(pady=10)
+        self.ticker_entry.insert(0, "GBPUSD")  # Set default ticker value
 
         tk.Label(self.live_trade_frame, text="Enter Amount:").pack(pady=10)
         self.amount_entry = tk.Entry(self.live_trade_frame)
         self.amount_entry.pack(pady=10)
+        self.amount_entry.insert(0, "10000")  # Set default amount value
 
         tk.Label(self.live_trade_frame, text="Select Broker:").pack(pady=10)
         self.broker_var = tk.StringVar(value="IBKR")

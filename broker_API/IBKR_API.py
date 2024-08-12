@@ -1,21 +1,14 @@
 from ib_insync import *
-import time
 
 
 class IBKR_API:
     def __init__(self, connection=None):
-        if connection == None:
+        if connection is None:
             self.ib = IB()
             self.connected = False
         else:
             self.ib = connection
             self.connected = True
-
-        self.disconnect()
-        self.connect()
-        
-        # self.ib = connection
-        # self.connected = True
 
     def connect(self, host='127.0.0.1', port=7497, clientId=1):
         if not self.connected:
@@ -39,19 +32,7 @@ class IBKR_API:
                 print(f"Disconnection failed: {e}")
 
     def is_connected(self):
-        try:
-            # Use ib.isConnected() to check the connection status
-            if self.ib.isConnected():
-                return True
-            else:
-                # If isConnected returns False, try to reconnect
-                self.connect()
-                return self.connected
-            
-        except Exception as e:
-            print(f"Error checking connection status: {e}")
-            return False
-
+        return self.ib.isConnected()
 
     def place_order(self, ticker, action, quantity):
         """

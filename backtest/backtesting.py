@@ -1,11 +1,11 @@
+import os
 import json
+import pandas as pd
+import multiprocessing as mp
+from utils.gmailer import send_email
+from strategies.test_strategy import *
 from datetime import datetime, timedelta
 from backtest.initialise import Backtest
-from strategies.test_strategy import *
-import pandas as pd
-from utils.gmailer import send_email
-import os
-import multiprocessing as mp
 from backtest.evaluation import Evaluation
 
 class Backtester:

@@ -1,20 +1,22 @@
-from ib_insync import *
-import pandas as pd
-from datetime import datetime, time
-import time as t
 import asyncio
 import threading
+import time as t
+import pandas as pd
+from ib_insync import *
+from datetime import datetime, time
 from broker_API.IBKR_API import IBKR_API
 from live_data.orderbook import OrderBook, Order
 from validation.validate_order import ValidateOrder
 from validation.validate_orderbook import ValidateOrderBook
 
+# Global variable to control the running state
+stop_event = threading.Event()
 
 class LiveData:
     def __init__(self, ticker, api, frequency):
         self.ticker = ticker
-        self.ib = api.ib
-        self.connected = False
+        self.ib = api.ib  # Use the IB instance from IBKR_API
+        self.api = api  # Store a reference to the IBKR_API instance
         self.data_frame = pd.DataFrame(columns=['timestamp', 'price'])
         self.frequency = frequency - 1
 
@@ -32,27 +34,10 @@ class LiveData:
             print(f"Failed to fetch price for {self.ticker}")
         return price
 
-    def connect(self):
-        if not self.connected:
-            print("Connecting to IBKR...")
-            try:
-                self.ib.connect('127.0.0.1', 7497, clientId=2)
-                self.connected = True
-                print('IBKR Connected')
-            except Exception as e:
-                print(f"API connection failed: {e}")
-                self.connected = False
-                raise
-
-    def disconnect(self):
-        if self.connected:
-            print("Disconnecting from IBKR...")
-            self.ib.disconnect()
-            print('IBKR Disconnected')
-            self.connected = False
-
     def get_live_data(self):
-        # self.connect()
+        if not self.api.is_connected():
+            self.api.connect()
+
         while True:
             try:
                 price = self.fetch_forex_price(verbose=1)
@@ -112,10 +97,7 @@ def RSIOverboughtOversoldStrategy(data_frame, params=(30, 75, 25)):
     return signal, rsi_value
 
 
-# Global variable to control the running state
-stop_event = threading.Event()
-
-def run_live_trading(ticker, amount, broker, api, stop_event):
+def run_live_trading(ticker, amount, broker, api, stop_event=stop_event):
     print(f"Setting up live trading on {broker}...")
 
     loop = asyncio.new_event_loop()
@@ -183,4 +165,4 @@ def run_live_trading(ticker, amount, broker, api, stop_event):
             break
 
     print("Live trading stopped.")
-    livedata.disconnect()   # Ensure the connection is closed properly
+    api.disconnect()   # Ensure the connection is closed properly
