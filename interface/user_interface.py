@@ -104,24 +104,6 @@ class TradingInterface:
         self.update_connection_status()
 
 
-    def update_ticker_info(self, current_price):
-        # This method is called by the background thread to update the UI.
-        self.root.after(0, self._update_ui_elements, current_price)
-
-    def _update_ui_elements(self, current_price):
-        # Update the price and determine the arrow direction
-        self.price_label.config(text=f"{current_price:.4f}")
-        self.ticker_label.config(text=f"{self.ticker_entry.get()}")
-        if self.last_price is not None:
-            if current_price > self.last_price:
-                self.price_arrow.config(text="↑", fg="green")
-            elif current_price < self.last_price:
-                self.price_arrow.config(text="↓", fg="red")
-            else:
-                self.price_arrow.config(text="-", fg="yellow")
-        self.last_price = current_price
-
-
     def init_backtest_tab(self):
         run_button = tk.Button(self.backtest_frame, text="Run Backtest", command=self.run_backtest)
         run_button.pack(side=tk.BOTTOM, pady=20, padx=20)
@@ -176,6 +158,41 @@ class TradingInterface:
         stop_button = tk.Button(self.live_trade_frame, text="Stop Live Trading", command=self.stop_live_trade)
         stop_button.pack(side=tk.RIGHT, pady=20, padx=20)
 
+    def update_connection_status(self):
+        # Update the connection status
+        if self.api.is_connected():
+            self.status_label.config(text="Connected", bg="green")
+        else:
+            self.status_label.config(text="Disconnected", bg="red")
+
+        # Schedule the next update in 2 seconds
+        self.root.after(5000, self.update_connection_status)
+        
+    def update_ticker_info(self, current_price):
+        # This method is called by the background thread to update the UI.
+        self.root.after(0, self._update_ui_elements, current_price)
+
+    def _update_ui_elements(self, current_price):
+        # Update the price and determine the arrow direction
+        self.price_label.config(text=f"{current_price:.4f}")
+        self.ticker_label.config(text=f"{self.ticker_entry.get()}")
+        if self.last_price is not None:
+            if current_price > self.last_price:
+                self.price_arrow.config(text="↑", fg="green")
+            elif current_price < self.last_price:
+                self.price_arrow.config(text="↓", fg="red")
+            else:
+                self.price_arrow.config(text="-", fg="yellow")
+        self.last_price = current_price
+
+    def toggle_terminal(self):
+        if self.terminal_frame.winfo_ismapped():
+            self.terminal_frame.pack_forget()
+            self.root.geometry(self.without_terminal_size)
+        else:
+            self.terminal_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, padx=10, pady=10)
+            self.root.geometry(self.initial_window_size)
+    
     def run_backtest(self):
         backtest = Backtester()
         backtest.run_backtest()
@@ -216,23 +233,6 @@ class TradingInterface:
         self.stop_event.set()  # Set the stop event to signal the thread to stop
         print("Stop signal sent for live trading.")
 
-    def toggle_terminal(self):
-        if self.terminal_frame.winfo_ismapped():
-            self.terminal_frame.pack_forget()
-            self.root.geometry(self.without_terminal_size)
-        else:
-            self.terminal_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, padx=10, pady=10)
-            self.root.geometry(self.initial_window_size)
-
-    def update_connection_status(self):
-        # Update the connection status
-        if self.api.is_connected():
-            self.status_label.config(text="Connected", bg="green")
-        else:
-            self.status_label.config(text="Disconnected", bg="red")
-
-        # Schedule the next update in 2 seconds
-        self.root.after(5000, self.update_connection_status)
 
 
 def run_interface(api):
