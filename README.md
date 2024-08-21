@@ -56,6 +56,19 @@ Backtrader relies on ```ibpy2```, which requires compatibility adjustments for P
 find backtrader/lib/python3.9/site-packages/ib/ -name '*.py' -exec 2to3 -w {} \;
 ```
 
+### Setting up gmail app password
+In order to recieve the evaulation emails you will need to set up an app password for your gmail account, follow the link below:
+
+https://towardsdatascience.com/automate-sending-emails-with-gmail-in-python-449cc0c3c317
+
+Once you have a app password, copy it and place it in utils/secrets.json like so:
+
+```
+{
+    "gmail_password": "your_app_password"
+}
+```
+
 ## Running the Code
 There are currently two ways to run this app, from the user interface or from the main.py (for running each feature separetly)
 

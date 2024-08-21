@@ -27,9 +27,8 @@ class TradingInterface:
         self.without_terminal_size = "380x600"
         self.stop_event = threading.Event()
         self.trading_thread = None
-        self.last_price = None  # Variable to store the last price
+        self.last_price = None
         self.initialise()
-
 
     def initialise(self):
         self.root.title("Trading Interface")

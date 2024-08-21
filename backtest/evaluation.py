@@ -1,14 +1,15 @@
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
-from datetime import datetime, timedelta
 from utils.gmailer import send_email
+from datetime import datetime, timedelta
+from utils.html_filler import load_html_template
 
 class Evaluation:
     def __init__(self, data_dir, num_days):
         self.data_dir = data_dir
         self.num_days = num_days
-        self.df = pd.DataFrame()  # Initialize an empty DataFrame
+        self.df = pd.DataFrame()
 
     def load_data(self):
         end_date = datetime.today().date()
@@ -26,7 +27,7 @@ class Evaluation:
             self.df.sort_values(by='date', inplace=True)
         else:
             print("No data found for the specified number of days.")
-            self.df = pd.DataFrame()  # Reset df to an empty DataFrame if no data is found
+            self.df = pd.DataFrame()
 
     def plot_average_pnl(self):
         if self.df.empty:
@@ -100,27 +101,15 @@ class Evaluation:
         best_stocks = self.best_performing_stocks()
         worst_stocks = self.worst_performing_stocks()
 
-        # Prepare email content
-        best_stocks_str = best_stocks.to_string(index=False)
-        worst_stocks_str = worst_stocks.to_string(index=False)
-        
-        content = f"""
-        Please find the attached summary of the backtesting results for the last {self.num_days} days.
+        # Convert DataFrames to HTML
+        best_stocks_html = best_stocks.to_html(index=False)
+        worst_stocks_html = worst_stocks.to_html(index=False)
 
-        Average PnL Plot is attached as 'average_pnl_plot.png'.
+        # Load and fill the HTML template
+        filled_html = load_html_template('utils/template.html', self.num_days, best_stocks_html, worst_stocks_html)
 
-        Best Performing Stocks:
-        {best_stocks_str}
-
-        Worst Performing Stocks:
-        {worst_stocks_str}
-        """
-        attachments = ['average_pnl_plot.png']
-
-        recipient = "jamesfryer1998@gmail.com"
-        subject = 'Backtesting Results Summary'
-        send_email(recipient, subject, content, attachments)
-        print(f"Email sent to: {recipient}")
+        # Send the email using yagmail
+        send_email("jamesfryer1998@gmail.com", 'Backtesting Results Summary', filled_html, ['average_pnl_plot.png'])
 
         # Delete the plot file after sending the email
         self.delete_saved_plot('average_pnl_plot.png')
