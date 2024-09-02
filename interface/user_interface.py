@@ -33,50 +33,64 @@ class TradingInterface:
     def initialise(self):
         self.root.title("Trading Interface")
         self.root.geometry(self.initial_window_size) 
-        small_font = tkFont.Font(size=11)
+        self.small_font = tkFont.Font(size=11)
 
-        # Create the left frame for the tabs and button
+        self._create_left_frame()
+        self._create_notebook()
+        self._create_tabs()
+
+        self._init_backtest_tab()
+        self._init_evaluation_tab()
+        self._init_live_trade_tab()
+        self._init_performance_tab()
+
+        self._create_toggle_terminal_button()
+        self._create_ticker_frame()
+        self._create_price_labels()
+        self._create_terminal_frame()
+        self._create_status_frame()
+
+        self._update_connection_status()
+
+    def _create_left_frame(self):
         self.left_frame = tk.Frame(self.root)
         self.left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
 
-        # Create the Notebook widget for tabs
+    def _create_notebook(self):
         self.notebook = ttk.Notebook(self.left_frame)
         self.notebook.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        # Create a frame for each tab
+    def _create_tabs(self):
         self.backtest_frame = ttk.Frame(self.notebook)
         self.evaluate_frame = ttk.Frame(self.notebook)
         self.live_trade_frame = ttk.Frame(self.notebook)
+        self.performance_frame = ttk.Frame(self.notebook)
 
-        # Add tabs to the Notebook
         self.notebook.add(self.backtest_frame, text="Backtest")
         self.notebook.add(self.evaluate_frame, text="Evaluation")
         self.notebook.add(self.live_trade_frame, text="Live Trading")
+        self.notebook.add(self.performance_frame, text="Performance")
 
-        # Initialize each tab with its content
-        self.init_backtest_tab()
-        self.init_evaluation_tab()
-        self.init_live_trade_tab()
 
-        # Add Toggle Terminal button under the Notebook in the left_frame
+    def _create_toggle_terminal_button(self):
         self.toggle_terminal_button = tk.Button(self.left_frame, text="Toggle Terminal", command=self.toggle_terminal)
         self.toggle_terminal_button.pack(side=tk.TOP, pady=10)
 
-        # Create the frame for ticker and price display at the top right
+    def _create_ticker_frame(self):
         self.ticker_frame = tk.Frame(self.root)
         self.ticker_frame.pack(side=tk.TOP, anchor="ne", padx=20, pady=10)  # Positioning at the top right
 
-        # Create labels for ticker, price, and indicator in a row
-        self.ticker_label = tk.Label(self.ticker_frame, text=f"Ticker: N/A", font=small_font)
+    def _create_price_labels(self):
+        self.ticker_label = tk.Label(self.ticker_frame, text=f"Ticker: N/A", font=tkFont.Font(size=11))
         self.ticker_label.pack(side=tk.LEFT, padx=5)
 
-        self.price_label = tk.Label(self.ticker_frame, text="Price: N/A", font=small_font)
+        self.price_label = tk.Label(self.ticker_frame, text="Price: N/A", font=tkFont.Font(size=11))
         self.price_label.pack(side=tk.LEFT, padx=5)
 
         self.price_arrow = tk.Label(self.ticker_frame, text="-")  # Initially set to "-"
         self.price_arrow.pack(side=tk.LEFT, padx=5)
 
-        # Create terminal frame at the bottom (initially visible)
+    def _create_terminal_frame(self):
         self.terminal_frame = tk.Frame(self.root)
         self.terminal_text = tk.Text(self.terminal_frame, wrap=tk.WORD, height=10)
         self.terminal_text.pack(fill=tk.BOTH, expand=True)
@@ -87,7 +101,7 @@ class TradingInterface:
         # Pack the terminal frame so it's visible on startup
         self.terminal_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        # Create a status frame to hold the status label and note
+    def _create_status_frame(self):
         self.status_frame = tk.Frame(self.root)
         self.status_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=5)
 
@@ -96,18 +110,15 @@ class TradingInterface:
         self.status_label.pack(side=tk.TOP, pady=5)
 
         # Note label below the status label
-        self.note_label = tk.Label(self.status_frame, text="Note: Connection established once trading is started", fg="light grey", font=small_font)
+        self.note_label = tk.Label(self.status_frame, text="Note: Connection established once trading is started", fg="light grey", font=tkFont.Font(size=11))
         self.note_label.pack(side=tk.TOP, pady=5)
 
-        # Start the periodic connection status check
-        self.update_connection_status()
 
-
-    def init_backtest_tab(self):
+    def _init_backtest_tab(self):
         run_button = tk.Button(self.backtest_frame, text="Run Backtest", command=self.run_backtest)
         run_button.pack(side=tk.BOTTOM, pady=20, padx=20)
 
-    def init_evaluation_tab(self):
+    def _init_evaluation_tab(self):
         tk.Label(self.evaluate_frame, text="Select Evaluation Type:").pack(pady=10)
 
         self.eval_type_var = tk.StringVar(value="Average")
@@ -134,7 +145,7 @@ class TradingInterface:
         run_button = tk.Button(self.evaluate_frame, text="Run Evaluation", command=self.evaluate_backtest)
         run_button.pack(side=tk.BOTTOM, pady=20, padx=20)
 
-    def init_live_trade_tab(self):
+    def _init_live_trade_tab(self):
         tk.Label(self.live_trade_frame, text="Enter Ticker:").pack(pady=10)
         self.ticker_entry = tk.Entry(self.live_trade_frame)
         self.ticker_entry.pack(pady=10)
@@ -157,7 +168,27 @@ class TradingInterface:
         stop_button = tk.Button(self.live_trade_frame, text="Stop Live Trading", command=self.stop_live_trade)
         stop_button.pack(side=tk.RIGHT, pady=20, padx=20)
 
-    def update_connection_status(self):
+    def _init_performance_tab(self):
+        # Create Real-time ROI indicator
+        self.roi_label = tk.Label(self.performance_frame, text="Real-time ROI:")
+        self.roi_value_label = tk.Label(self.performance_frame, text="")
+        self.roi_label.pack(pady=10)
+        self.roi_value_label.pack(pady=10)
+
+        # Create Unrealized Profit and Realized Profit indicators
+        self.unrealized_profit_label = tk.Label(self.performance_frame, text="Unrealized Profit:")
+        self.unrealized_profit_value_label = tk.Label(self.performance_frame, text="")
+        self.realized_profit_label = tk.Label(self.performance_frame, text="Realized Profit:")
+        self.realized_profit_value_label = tk.Label(self.performance_frame, text="")
+        self.unrealized_profit_label.pack(pady=10)
+        self.unrealized_profit_value_label.pack(pady=10)
+        self.realized_profit_label.pack(pady=10)
+        self.realized_profit_value_label.pack(pady=10)
+
+        # Schedule updates for the performance indicators
+        self.update_performance_indicators()
+
+    def _update_connection_status(self):
         # Update the connection status
         if self.api.is_connected():
             self.status_label.config(text="Connected", bg="green")
@@ -165,8 +196,8 @@ class TradingInterface:
             self.status_label.config(text="Disconnected", bg="red")
 
         # Schedule the next update in 2 seconds
-        self.root.after(5000, self.update_connection_status)
-        
+        self.root.after(5000, self._update_connection_status)
+
     def update_ticker_info(self, current_price):
         # This method is called by the background thread to update the UI.
         self.root.after(0, self._update_ui_elements, current_price)
@@ -184,6 +215,32 @@ class TradingInterface:
                 self.price_arrow.config(text="-", fg="yellow")
         self.last_price = current_price
 
+    def update_performance_indicators(self):
+        # Update ROI indicator
+        roi_value = self.calculate_realtime_roi()
+        self.roi_value_label.config(text=str(roi_value))
+
+        # Update Unrealized Profit and Realized Profit indicators
+        unrealized_profit_value = self.calculate_unrealized_profit()
+        realized_profit_value = self.calculate_realized_profit()
+        self.unrealized_profit_value_label.config(text=str(unrealized_profit_value))
+        self.realized_profit_value_label.config(text=str(realized_profit_value))
+
+        # Schedule the next update in 5 seconds
+        self.root.after(5000, self.update_performance_indicators)
+
+    def calculate_realtime_roi(self):
+        # Placeholder for calculating ROI based on current portfolio value and initial portfolio value
+        return 0.0
+
+    def calculate_unrealized_profit(self):
+        # Placeholder for calculating unrealized profit by tracking open positions
+        return 0.0
+
+    def calculate_realized_profit(self):
+        # Placeholder for calculating realized profit by tracking closed positions
+        return 0.0
+
     def toggle_terminal(self):
         if self.terminal_frame.winfo_ismapped():
             self.terminal_frame.pack_forget()
@@ -191,7 +248,7 @@ class TradingInterface:
         else:
             self.terminal_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, padx=10, pady=10)
             self.root.geometry(self.initial_window_size)
-    
+
     def run_backtest(self):
         backtest = Backtester()
         backtest.run_backtest()

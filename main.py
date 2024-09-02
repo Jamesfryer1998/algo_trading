@@ -5,10 +5,10 @@ from interface.user_interface import run_interface
 
 def main():
     api = IBKR_API()
-    # run_interface(api)
-    backtest = Backtester()
+    run_interface(api)
+    # backtest = Backtester()
     # backtest.run_backtest()
-    backtest.evaluate(30, "all")
+    # backtest.evaluate(30, "all")
     # run_live_trading("GBPUSD", 10000, "IBKR", api)
 
 
