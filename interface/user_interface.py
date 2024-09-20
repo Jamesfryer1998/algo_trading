@@ -115,8 +115,15 @@ class TradingInterface:
 
 
     def _init_backtest_tab(self):
-        run_button = tk.Button(self.backtest_frame, text="Run Backtest", command=self.run_backtest)
-        run_button.pack(side=tk.BOTTOM, pady=20, padx=20)
+        # Add label to display available backfill days
+        backtest = Backtester()
+        backfill_info_text = f"Number of available days to backfill: {len(backtest.get_days_to_backfill())}"
+        backfill_label = tk.Label(self.backtest_frame, text=backfill_info_text, font=("Arial", 12))
+        backfill_label.pack(side=tk.BOTTOM, pady=10)
+        run_backtest_backfill_button = tk.Button(self.backtest_frame, text="Run Backfill Backtest", command=self.backfill_backtest)
+        run_backtest_backfill_button.pack(side=tk.BOTTOM, pady=20, padx=20)
+        run_backtest_button = tk.Button(self.backtest_frame, text="Run Backtest", command=self.run_backtest)
+        run_backtest_button.pack(side=tk.BOTTOM, pady=20, padx=20)
 
     def _init_evaluation_tab(self):
         tk.Label(self.evaluate_frame, text="Select Evaluation Type:").pack(pady=10)
@@ -249,6 +256,10 @@ class TradingInterface:
             self.terminal_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, padx=10, pady=10)
             self.root.geometry(self.initial_window_size)
 
+    def backfill_backtest(self):
+        backtest = Backtester()
+        backtest.fill_gaps()
+        
     def run_backtest(self):
         backtest = Backtester()
         backtest.run_backtest()

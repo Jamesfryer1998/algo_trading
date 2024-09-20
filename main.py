@@ -7,6 +7,7 @@ def main():
     api = IBKR_API()
     run_interface(api)
     # backtest = Backtester()
+    # backtest.fill_gaps()
     # backtest.run_backtest()
     # backtest.evaluate(30, "all")
     # run_live_trading("GBPUSD", 10000, "IBKR", api)
