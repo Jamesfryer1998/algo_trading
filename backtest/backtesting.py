@@ -97,11 +97,6 @@ class Backtester:
 
         latest_data_date_str = latest_data_date.strftime('%d-%m-%Y')
         current_date_str = current_date.strftime('%d-%m-%Y')
-        print("Latest Data Date:", latest_data_date_str)
-        print("Current Date:", current_date_str)
-
-        if latest_data_date >= current_date:
-            raise ValueError(f"The latest data date ({latest_data_date}) is the same as or after the current date ({current_date}). No gaps to fill.")
 
         # Max days to look back in yfinance at 1min intervals is 7 days
         max_days_backfill = 6
@@ -119,18 +114,19 @@ class Backtester:
         days_to_backfill = self.get_days_to_backfill()
         print(f"Backfilling data for dates: {days_to_backfill}")
 
-        for date in days_to_backfill:
-            print(f"Providing backtest backfill for {date.strftime('%d-%m-%Y')}")
-            file_name = os.path.join(self.data_file_path, f"{date.strftime('%d-%m-%Y')}.csv")
-            combinations = self.generate_combinations(self.list_strats, self.tickers, self.currencies, date)
-            
-            with mp.Pool(processes=mp.cpu_count()) as pool:
-                results = pool.map(self.run_backtest_instance, combinations)
+        if len(days_to_backfill) != 0:
+            for date in days_to_backfill:
+                print(f"Providing backtest backfill for {date.strftime('%d-%m-%Y')}")
+                file_name = os.path.join(self.data_file_path, f"{date.strftime('%d-%m-%Y')}.csv")
+                combinations = self.generate_combinations(self.list_strats, self.tickers, self.currencies, date)
+                
+                with mp.Pool(processes=mp.cpu_count()) as pool:
+                    results = pool.map(self.run_backtest_instance, combinations)
 
-            results = [res for res in results if res is not None]
-            df = pd.DataFrame(results)
-            profitable_df = df[df["pnl"] > 1]
-            profitable_df.to_csv(file_name, index=False)
+                results = [res for res in results if res is not None]
+                df = pd.DataFrame(results)
+                profitable_df = df[df["pnl"] > 1]
+                profitable_df.to_csv(file_name, index=False)
         
         send_email("jamesfryer1998@gmail.com", "Backtesting backfill complete", f"{len(days_to_backfill)} days backfilled with backtesting.")
         
