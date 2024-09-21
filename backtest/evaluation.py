@@ -109,7 +109,7 @@ class Evaluation:
         filled_html = load_html_template('utils/template.html', self.num_days, best_stocks_html, worst_stocks_html)
 
         # Send the email using yagmail
-        send_email("jamesfryer1998@gmail.com", 'Backtesting Results Summary', filled_html, ['average_pnl_plot.png'])
+        send_email('Backtesting Results Summary', filled_html, ['average_pnl_plot.png'])
 
         # Delete the plot file after sending the email
         self.delete_saved_plot('average_pnl_plot.png')

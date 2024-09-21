@@ -125,7 +125,7 @@ class Backtester:
                 profitable_df = df[df["pnl"] > 1]
                 profitable_df.to_csv(file_name, index=False)
         
-        send_email("jamesfryer1998@gmail.com", "Backtesting backfill complete", f"{len(days_to_backfill)} days backfilled with backtesting.")
+        send_email("Backtesting backfill complete", f"{len(days_to_backfill)} days backfilled with backtesting.")
         
 
     def run_backtest(self, send_email=False):
@@ -143,4 +143,4 @@ class Backtester:
 
         profitable_df.to_csv(file_name, index=False)
         if send_email:
-            send_email("jamesfryer1998@gmail.com", "Backtesting complete", "Complete")
+            send_email("Backtesting complete", "Complete")
