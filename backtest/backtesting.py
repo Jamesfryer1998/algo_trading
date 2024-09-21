@@ -95,12 +95,9 @@ class Backtester:
         date_strs = [file.replace('.csv', '') for file in data_files]
         latest_data_date = max([datetime.strptime(date_str, '%d-%m-%Y').date() for date_str in date_strs])
 
-        latest_data_date_str = latest_data_date.strftime('%d-%m-%Y')
-        current_date_str = current_date.strftime('%d-%m-%Y')
-
         # Max days to look back in yfinance at 1min intervals is 7 days
         max_days_backfill = 6
-        backfill_start_date = max(latest_data_date, current_date - timedelta(days=max_days_backfill))
+        backfill_start_date = max(latest_data_date + timedelta(days=1), current_date - timedelta(days=max_days_backfill))
         dates = pd.date_range(start=backfill_start_date, end=current_date)
         days_to_backfill = [date.date() for date in dates if date.isoweekday() in [1, 2, 3, 4, 5]]
 

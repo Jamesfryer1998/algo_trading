@@ -6,6 +6,7 @@ from interface.user_interface import run_interface
 def main():
     api = IBKR_API()
     run_interface(api)
+    
     # backtest = Backtester()
     # backtest.fill_gaps()
     # backtest.run_backtest()
