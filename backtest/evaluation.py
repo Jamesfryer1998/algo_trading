@@ -29,6 +29,27 @@ class Evaluation:
             print("No data found for the specified number of days.")
             self.df = pd.DataFrame()
 
+    def configure_plot(self, title):
+        plt.xlabel('Date')
+        plt.ylabel('PnL')
+        plt.title(title)
+        plt.legend()
+        plt.gca().set_facecolor('#f0f8ff')
+        plt.grid(color='grey', linestyle='--', linewidth=0.5)
+        min_date = (self.df['date'].min() - pd.Timedelta(days=1)).date()
+        max_date = (self.df['date'].max() + pd.Timedelta(days=1)).date()
+        plt.xlim(min_date, max_date)
+        plt.xticks(rotation=45)
+
+    def save_plot(self, image_path):
+        plt.savefig(image_path)
+
+    def delete_saved_plot(self, image_path):
+        if os.path.exists(image_path):
+            os.remove(image_path)
+        else:
+            print("The file does not exist.")
+
     def plot_average_pnl(self):
         if self.df.empty:
             self.load_data()
@@ -56,8 +77,7 @@ class Evaluation:
             self.save_plot(f'{ticker}_pnl_plot.png')
             plt.close()
 
-
-    def best_performing_stocks(self):
+    def best_performing_ticker(self):
         if self.df.empty:
             self.load_data()
         if not self.df.empty:
@@ -66,7 +86,7 @@ class Evaluation:
             print(best_stocks)
             return best_stocks
 
-    def worst_performing_stocks(self):
+    def worst_performing_ticker(self):
         if self.df.empty:
             self.load_data()
         if not self.df.empty:
@@ -74,22 +94,15 @@ class Evaluation:
             print("Worst Performing Stocks:")
             print(worst_stocks)
             return worst_stocks
+        
+    def best_performaing_strategy(self):
+        self.load_data()
+        print(self.df)
+        # best strategy over a averge time period
+        
 
-    def configure_plot(self, title):
-        plt.xlabel('Date')
-        plt.ylabel('PnL')
-        plt.title(title)
-        plt.legend()
-        plt.gca().set_facecolor('#f0f8ff')
-        plt.grid(color='grey', linestyle='--', linewidth=0.5)
-        min_date = (self.df['date'].min() - pd.Timedelta(days=1)).date()
-        max_date = (self.df['date'].max() + pd.Timedelta(days=1)).date()
-        plt.xlim(min_date, max_date)
-        plt.xticks(rotation=45)
-
-    def save_plot(self, image_path):
-        plt.savefig(image_path)
-
+        return None
+        
     def send_summary_email(self):
         self.load_data()
         if self.df.empty:
@@ -98,8 +111,8 @@ class Evaluation:
 
         # Generate and save plots
         self.plot_average_pnl()
-        best_stocks = self.best_performing_stocks()
-        worst_stocks = self.worst_performing_stocks()
+        best_stocks = self.best_performing_ticker()
+        worst_stocks = self.worst_performing_ticker()
 
         # Convert DataFrames to HTML
         best_stocks_html = best_stocks.to_html(index=False)
@@ -113,9 +126,3 @@ class Evaluation:
 
         # Delete the plot file after sending the email
         self.delete_saved_plot('average_pnl_plot.png')
-
-    def delete_saved_plot(self, image_path):
-        if os.path.exists(image_path):
-            os.remove(image_path)
-        else:
-            print("The file does not exist.")

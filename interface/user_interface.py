@@ -118,12 +118,14 @@ class TradingInterface:
         # Add label to display available backfill days
         backtest = Backtester()
         days_to_backfill = len(backtest.get_days_to_backfill())
-        if days_to_backfill >= 1:
+        
+        if days_to_backfill >= 2:
             backfill_info_text = f"Number of available days to backfill: {days_to_backfill}"
             backfill_label = tk.Label(self.backtest_frame, text=backfill_info_text, font=("Arial", 12))
             backfill_label.pack(side=tk.BOTTOM, pady=10)
-        run_backtest_backfill_button = tk.Button(self.backtest_frame, text="Run Backfill Backtest", command=self.backfill_backtest)
-        run_backtest_backfill_button.pack(side=tk.BOTTOM, pady=20, padx=20)
+            run_backtest_backfill_button = tk.Button(self.backtest_frame, text="Run Backfill Backtest", command=self.backfill_backtest)
+            run_backtest_backfill_button.pack(side=tk.BOTTOM, pady=20, padx=20)
+
         run_backtest_button = tk.Button(self.backtest_frame, text="Run Backtest", command=self.run_backtest)
         run_backtest_button.pack(side=tk.BOTTOM, pady=20, padx=20)
 
