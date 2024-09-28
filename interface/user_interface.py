@@ -108,26 +108,6 @@ class TradingInterface:
         self.note_label = tk.Label(self.status_frame, text="Note: Connection established once trading is started", fg="light grey", font=tkFont.Font(size=11))
         self.note_label.pack(side=tk.TOP, pady=5)
 
-    def _init_performance_tab(self):
-        # Create Real-time ROI indicator
-        self.roi_label = tk.Label(self.performance_frame, text="Real-time ROI:")
-        self.roi_value_label = tk.Label(self.performance_frame, text="")
-        self.roi_label.pack(pady=10)
-        self.roi_value_label.pack(pady=10)
-
-        # Create Unrealized Profit and Realized Profit indicators
-        self.unrealized_profit_label = tk.Label(self.performance_frame, text="Unrealized Profit:")
-        self.unrealized_profit_value_label = tk.Label(self.performance_frame, text="")
-        self.realized_profit_label = tk.Label(self.performance_frame, text="Realized Profit:")
-        self.realized_profit_value_label = tk.Label(self.performance_frame, text="")
-        self.unrealized_profit_label.pack(pady=10)
-        self.unrealized_profit_value_label.pack(pady=10)
-        self.realized_profit_label.pack(pady=10)
-        self.realized_profit_value_label.pack(pady=10)
-
-        # Schedule updates for the performance indicators
-        self.update_performance_indicators()
-
     def _update_connection_status(self):
         # Update the connection status
         if self.api.is_connected():
