@@ -49,7 +49,7 @@ def SimpleMovingAverageStrategy(data_frame, params=(10, 30)):
 
 
 ##############################################################################
-def MAcrossoverStrategy(data_frame, params=(30, 50)):
+def MAcrossover(data_frame, params=(30, 50)):
     sma_fast_period, sma_slow_period = params
 
     # Calculate fast and slow SMAs
