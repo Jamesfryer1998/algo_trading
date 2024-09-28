@@ -6,7 +6,7 @@ from backtest.evaluation import Evaluation
 from strategies.live_strategies import live_strategy_list
 
 
-class Live_trade_UI:
+class Live_trade_tab:
     def __init__(self, notebook, api, update_ticker_info):
         self.notebook = notebook
         self.api = api

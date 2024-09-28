@@ -4,11 +4,10 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
 from strategies.live_strategies import *
-from interface.backtest_UI import Backtest_UI
-from interface.evaluation_UI import Evaluation_UI
-from interface.live_trading_UI import Live_trade_UI
-from interface.performance_UI import Performance_UI
-from live_data.data_stream import run_live_trading
+from interface.backtest_tab import Backtest_tab
+from interface.evaluation_tab import Evaluation_tab
+from interface.live_trading_tab import Live_trade_tab
+from interface.performance_tab import Performance_tab
 
 
 class RedirectText(object):
@@ -41,10 +40,10 @@ class TradingInterface:
         self._create_left_frame()
         self._create_notebook()
 
-        self.backtest_tab = Backtest_UI(self.notebook)
-        self.evaluation_tab = Evaluation_UI(self.notebook)
-        self.live_trade_tab = Live_trade_UI(self.notebook, self.api, self.update_ticker_info)
-        self.performance_tab = Performance_UI(self.notebook, self.root)
+        self.backtest_tab = Backtest_tab(self.notebook)
+        self.evaluation_tab = Evaluation_tab(self.notebook)
+        self.live_trade_tab = Live_trade_tab(self.notebook, self.api, self.update_ticker_info)
+        self.performance_tab = Performance_tab(self.notebook, self.root)
 
         self.backtest_tab._build_tab()
         self.evaluation_tab._build_tab()

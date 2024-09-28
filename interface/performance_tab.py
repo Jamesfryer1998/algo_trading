@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-class Performance_UI:
+class Performance_tab:
     def __init__(self, notebook, root):
         self.notebook = notebook
         self.root = root

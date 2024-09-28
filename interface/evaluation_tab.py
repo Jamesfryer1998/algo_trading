@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from backtest.backtesting import Backtester
 
-class Evaluation_UI:
+class Evaluation_tab:
     def __init__(self, notebook):
         self.notebook = notebook
 
