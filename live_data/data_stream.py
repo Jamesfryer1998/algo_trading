@@ -4,7 +4,8 @@ import time as t
 import pandas as pd
 from ib_insync import *
 from datetime import datetime, time
-from broker_API.IBKR_API import IBKR_API
+# from broker_API.IBKR_API import IBKR_API
+from strategies.live_strategies import *
 from live_data.orderbook import OrderBook, Order
 from validation.validate_order import ValidateOrder
 from validation.validate_orderbook import ValidateOrderBook
@@ -71,30 +72,6 @@ class LiveData:
                 t.sleep(self.frequency)  # Retry after a short delay in case of error
 
         self.disconnect()
-
-
-# Move this out to own file
-def RSIOverboughtOversoldStrategy(data_frame, params=(30, 75, 25)):
-    rsi_period, rsi_overbought, rsi_oversold = params
-
-    # Calculate RSI
-    delta = data_frame['price'].diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=rsi_period).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=rsi_period).mean()
-    rs = gain / loss
-    rsi = 100 - (100 / (1 + rs))
-
-    # Last RSI value
-    rsi_value = rsi.iloc[-1]
-
-    if rsi_value >= rsi_overbought:
-        signal = 2  # Sell signal
-    elif rsi_value <= rsi_oversold:
-        signal = 1  # Buy signal
-    else:
-        signal = 0  # Hold signal
-
-    return signal, rsi_value
 
 
 def run_live_trading(ticker, amount, broker, api, stop_event=None, update_ui_callback=None):

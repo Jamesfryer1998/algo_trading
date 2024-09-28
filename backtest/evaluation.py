@@ -95,13 +95,14 @@ class Evaluation:
             print(worst_stocks)
             return worst_stocks
         
-    def best_performaing_strategy(self):
+    def best_performing_strategy(self):
         self.load_data()
-        print(self.df)
-        # best strategy over a averge time period
         
-
-        return None
+        avg_pnl_per_strategy = self.df.groupby('strategy')['pnl'].mean()
+        sorted_strategies = avg_pnl_per_strategy.sort_values(ascending=False)
+        top_strategy = sorted_strategies.idxmax()  # returns the strategy with the highest avg pnl
+        
+        return top_strategy
         
     def send_summary_email(self):
         self.load_data()

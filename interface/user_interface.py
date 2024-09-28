@@ -3,7 +3,9 @@ import threading
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
-from broker_API.IBKR_API import IBKR_API
+from strategies.live_strategies import *
+# from broker_API.IBKR_API import IBKR_API
+from backtest.evaluation import Evaluation
 from backtest.backtesting import Backtester
 from live_data.data_stream import run_live_trading
 
@@ -28,6 +30,7 @@ class TradingInterface:
         self.stop_event = threading.Event()
         self.trading_thread = None
         self.last_price = None
+        self.backtest_data_path = "backtest/data"
         self.initialise()
 
     def initialise(self):
@@ -70,7 +73,6 @@ class TradingInterface:
         self.notebook.add(self.evaluate_frame, text="Evaluation")
         self.notebook.add(self.live_trade_frame, text="Live Trading")
         self.notebook.add(self.performance_frame, text="Performance")
-
 
     def _create_toggle_terminal_button(self):
         self.toggle_terminal_button = tk.Button(self.left_frame, text="Toggle Terminal", command=self.toggle_terminal)
@@ -118,7 +120,7 @@ class TradingInterface:
         # Add label to display available backfill days
         backtest = Backtester()
         days_to_backfill = len(backtest.get_days_to_backfill())
-        
+
         if days_to_backfill >= 2:
             backfill_info_text = f"Number of available days to backfill: {days_to_backfill}"
             backfill_label = tk.Label(self.backtest_frame, text=backfill_info_text, font=("Arial", 12))
@@ -172,6 +174,13 @@ class TradingInterface:
         broker_dropdown = ttk.Combobox(self.live_trade_frame, textvariable=self.broker_var)
         broker_dropdown['values'] = ("IBKR",)
         broker_dropdown.pack(pady=10)
+
+        tk.Label(self.live_trade_frame, text="Strategy:").pack(pady=10)
+        eval = Evaluation(self.backtest_data_path, 30)
+        self.strategy_var = tk.StringVar(value=eval.best_performing_strategy())
+        strategy_dropdown = ttk.Combobox(self.live_trade_frame, textvariable=self.strategy_var)
+        strategy_dropdown['values'] = live_strategy_list()
+        strategy_dropdown.pack(pady=10)
 
         run_button = tk.Button(self.live_trade_frame, text="Start Live Trading", command=self.live_trade)
         run_button.pack(side=tk.LEFT, pady=20, padx=20)
