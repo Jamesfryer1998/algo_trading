@@ -7,7 +7,7 @@ from utils.gmailer import send_email
 from strategies.test_strategy import *
 from datetime import datetime, timedelta
 from backtest.initialise import Backtest
-from backtest.evaluation import Evaluation
+from evaluation.evaluation import Evaluation
 
 class Backtester:
     list_strats = [

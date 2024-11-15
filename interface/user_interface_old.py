@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
 from strategies.live_strategies import *
-from backtest.evaluation import Evaluation
+from evaluation.evaluation import Evaluation
 from backtest.backtesting import Backtester
 from live_data.data_stream import run_live_trading
 

@@ -2,7 +2,7 @@ import threading
 import tkinter as tk
 from tkinter import ttk
 from live_data.data_stream import run_live_trading
-from backtest.evaluation import Evaluation
+from evaluation.evaluation import Evaluation
 from strategies.live_strategies import live_strategy_list
 
 

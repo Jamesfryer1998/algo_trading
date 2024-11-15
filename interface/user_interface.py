@@ -141,34 +141,7 @@ class TradingInterface:
         else:
             self.terminal_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, padx=10, pady=10)
             self.root.geometry(self.initial_window_size)
-
-
-    # def live_trade(self):
-    #     self.stop_event.clear()  # Clear the stop event before starting
-
-    #     ticker = self.ticker_entry.get()
-    #     amount = self.amount_entry.get()
-    #     broker = self.broker_var.get()
-
-    #     if not ticker or not amount or not broker:
-    #         print("Please fill in all the fields before starting live trading.")
-    #         return
-
-    #     try:
-    #         amount = float(amount)
-    #     except ValueError:
-    #         print("Amount must be a number.")
-    #         return
-
-    #     # Run the live trading in a separate thread and pass the callback for updating the UI
-    #     self.trading_thread = threading.Thread(target=run_live_trading, args=(
-    #         ticker, amount, broker, self.api, self.stop_event, self.update_ticker_info))
-    #     self.trading_thread.start()
-
-    # def stop_live_trade(self):
-    #     self.stop_event.set()  # Set the stop event to signal the thread to stop
-    #     print("Stop signal sent for live trading.")
-
+            
 
 def run_interface(api):
     root = tk.Tk()
