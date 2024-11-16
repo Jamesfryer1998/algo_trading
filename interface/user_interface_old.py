@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
 from strategies.live_strategies import *
-from evaluation.evaluation import Evaluation
+from evaluation.evaluate_backtest import EvaluateBacktest
 from backtest.backtesting import Backtester
 from live_data.data_stream import run_live_trading
 
@@ -175,7 +175,7 @@ class TradingInterface:
         broker_dropdown.pack(pady=10)
 
         tk.Label(self.live_trade_frame, text="Strategy:").pack(pady=10)
-        eval = Evaluation(self.backtest_data_path, 30)
+        eval = EvaluateBacktest(self.backtest_data_path, 30)
         self.strategy_var = tk.StringVar(value=eval.best_performing_strategy())
         strategy_dropdown = ttk.Combobox(self.live_trade_frame, textvariable=self.strategy_var)
         strategy_dropdown['values'] = live_strategy_list()

@@ -7,7 +7,7 @@ from utils.gmailer import send_email
 from strategies.test_strategy import *
 from datetime import datetime, timedelta
 from backtest.initialise import Backtest
-from evaluation.evaluation import Evaluation
+from evaluation.evaluate_backtest import EvaluateBacktest
 
 class Backtester:
     list_strats = [
@@ -80,7 +80,7 @@ class Backtester:
             return "RSIOverboughtOversoldStrategy"
     
     def evaluate(self, num_days, type, ticker=None):
-        evaluation = Evaluation(self.data_file_path, num_days)
+        evaluation = EvaluateBacktest(self.data_file_path, num_days)
         if type == "average":
             evaluation.plot_average_pnl()
         elif type == "ticker":

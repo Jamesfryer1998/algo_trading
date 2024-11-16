@@ -5,7 +5,7 @@ from utils.gmailer import send_email
 from datetime import datetime, timedelta
 from utils.html_filler import load_html_template
 
-class Evaluation:
+class EvaluateBacktest:
     def __init__(self, data_dir, num_days):
         self.data_dir = data_dir
         self.num_days = num_days
