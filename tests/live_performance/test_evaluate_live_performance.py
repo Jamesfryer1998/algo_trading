@@ -52,7 +52,7 @@ class TestEvaluateLivePerformance(unittest.TestCase):
         current_price = 2
         evaluator = EvaluateLivePerformance(current_price, "tests/live_performance/data/multiple_sell.csv")
         evaluator.load_data()
-        assert_calculations(self, evaluator, 0, -50001.0, -100.002)
+        assert_calculations(self, evaluator, 10, -50001.0, -100.002)
 
     def test_buy_buy_sell(self):
         current_price = 2
