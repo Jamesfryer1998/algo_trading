@@ -84,3 +84,12 @@ class EvaluatePerformance:
         }
         with open('performance_data.json', 'w') as f:
             json.dump(performance_data, f, indent=4)
+
+## Run from main like this
+from evaluation.evaluate_performance import EvaluatePerformance
+
+evaluator = EvaluatePerformance()
+evaluator.load_data()
+evaluator.save_performance_data() ## WHEN USING NEED TO GIVE THIS A LAST_PRICE, GET THIS FROM API
+print(f"Total Profit/Loss: {evaluator.calculate_profit_loss()}")
+print(f"Average Gain/Loss per Trade: {evaluator.calculate_average_gain_loss()}")

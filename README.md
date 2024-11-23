@@ -121,3 +121,13 @@ This is currently in development, but if you wish to run you will need the IBKR 
 ```
 
 In the final version, live trading will involve real-time data collection from Interactive Brokers (IBKR) every 10 seconds. The selected strategies will execute continuously based on this live data.
+
+
+### Unit Tests
+So far I have added a few unit tests along with some test data of orderbook entires.
+
+To run use:
+
+```
+    python -m unittest discover -s tests/live_performance
+```

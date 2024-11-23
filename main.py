@@ -16,13 +16,5 @@ def main():
     # evaluator.best_performing_strategy()
 
 
-# if __name__ == "__main__":
-#     main()
-
-from evaluation.evaluate_performance import EvaluatePerformance
-
-evaluator = EvaluatePerformance()
-evaluator.load_data()
-evaluator.save_performance_data() ## WHEN USING NEED TO GIVE THIS A LAST_PRICE, GET THIS FROM API
-print(f"Total Profit/Loss: {evaluator.calculate_profit_loss()}")
-print(f"Average Gain/Loss per Trade: {evaluator.calculate_average_gain_loss()}")
+if __name__ == "__main__":
+    main()

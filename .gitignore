@@ -2,5 +2,5 @@
 __pycache__/
 
 backtest/data/
-live_daya/data/
+live_data/data/
 utils/secrets.json

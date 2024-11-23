@@ -1,37 +1,28 @@
 import tkinter as tk
 from tkinter import ttk
+from evaluation.evaluate_live_performance import EvaluateLivePerformance
 
 class Performance_tab:
-    def __init__(self, notebook, root):
+    def __init__(self, notebook, root, api, get_current_price):
         self.notebook = notebook
         self.root = root
-        
-    def calculate_realtime_roi(self):
-        # Placeholder for calculating ROI based on current portfolio value and initial portfolio value
-        return 0.0
+        self.api = api
+        self.get_current_price = get_current_price
 
-    def calculate_unrealized_profit(self):
-        # Placeholder for calculating unrealized profit by tracking open positions
-        return 0.0
-
-    def calculate_realized_profit(self):
-        # Placeholder for calculating realized profit by tracking closed positions
-        return 0.0
-    
     def update_performance_indicators(self):
-        # Update ROI indicator
-        roi_value = self.calculate_realtime_roi()
-        self.roi_value_label.config(text=str(roi_value))
+        if self.api.is_connected():
+            current_price = self.get_current_price()
+            if current_price is not None:
+                eval = EvaluateLivePerformance(current_price)
+                realized_profit_value, unrealized_profit_value, roi_value = eval.evaluate()
 
-        # Update Unrealized Profit and Realized Profit indicators
-        unrealized_profit_value = self.calculate_unrealized_profit()
-        realized_profit_value = self.calculate_realized_profit()
-        self.unrealized_profit_value_label.config(text=str(unrealized_profit_value))
-        self.realized_profit_value_label.config(text=str(realized_profit_value))
+                self.roi_value_label.config(text=f"{roi_value:.3f}")
+                self.unrealized_profit_value_label.config(text=f"{unrealized_profit_value:.3f}")
+                self.realized_profit_value_label.config(text=f"{realized_profit_value:.3f}")
 
-        # Schedule the next update in 5 seconds
-        self.root.after(5000, self.update_performance_indicators)
-    
+        # Always schedule the next check, regardless of connection status
+        self.root.after(10000, self.update_performance_indicators)
+
     def _create_tab(self):
         self.performance_frame = ttk.Frame(self.notebook)
         self.notebook.add(self.performance_frame, text="Performance")

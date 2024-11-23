@@ -4,7 +4,6 @@ import time as t
 import pandas as pd
 from ib_insync import *
 from datetime import datetime, time
-# from broker_API.IBKR_API import IBKR_API
 from strategies.live_strategies import *
 from live_data.orderbook import OrderBook, Order
 from validation.validate_order import ValidateOrder
@@ -19,7 +18,7 @@ class LiveData:
         self.ib = api.ib  # Use the IB instance from IBKR_API
         self.api = api  # Store a reference to the IBKR_API instance
         self.data_frame = pd.DataFrame(columns=['timestamp', 'price'])
-        self.frequency = frequency - 1
+        self.frequency = frequency
 
     def fetch_forex_price(self, verbose=0):
         contract = Forex(self.ticker)

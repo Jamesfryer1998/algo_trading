@@ -43,7 +43,7 @@ class TradingInterface:
         self.backtest_tab = Backtest_tab(self.notebook)
         self.evaluation_tab = Evaluation_tab(self.notebook)
         self.live_trade_tab = Live_trade_tab(self.notebook, self.api, self.update_ticker_info)
-        self.performance_tab = Performance_tab(self.notebook, self.root)
+        self.performance_tab = Performance_tab(self.notebook, self.root, self.api, self.get_current_price)
 
         self.backtest_tab._build_tab()
         self.evaluation_tab._build_tab()
@@ -133,6 +133,9 @@ class TradingInterface:
             else:
                 self.price_arrow.config(text="-", fg="yellow")
         self.last_price = current_price
+
+    def get_current_price(self):
+        return self.last_price
 
     def toggle_terminal(self):
         if self.terminal_frame.winfo_ismapped():
