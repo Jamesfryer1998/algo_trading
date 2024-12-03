@@ -1,6 +1,4 @@
 import unittest
-from unittest.mock import patch
-import pandas as pd
 from evaluation.evaluate_live_performance import EvaluateLivePerformance
 
 def assert_calculations(self,

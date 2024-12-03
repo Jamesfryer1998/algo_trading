@@ -17,11 +17,9 @@ class EvaluateLivePerformance:
     def load_data(self):
         """Load order book data using pandas."""
         if not os.path.exists(self.file_name):
-            raise FileNotFoundError(f"Order book file {self.file_name} does not exist.")
+            raise FileNotFoundError(f"Order book file {self.file_name} does not exist yet.")
         
-        # Use pandas to load the CSV file
         self.data = pd.read_csv(self.file_name)
-        # Convert columns to appropriate data types
         self.data["Price"] = self.data["Price"].astype(float)
         self.data["Amount"] = self.data["Amount"].astype(float)
 
@@ -36,11 +34,11 @@ class EvaluateLivePerformance:
         buy_trades = []
         sell_trades = []
 
-        for _, row in self.data.iterrows():  # Iterating through DataFrame rows
+        for _, row in self.data.iterrows():
             signal = row["Signal"]
             price = row["Price"]
             amount = row["Amount"]
-            commission = price * amount * self.commission  # Commission for each trade
+            commission = price * amount * self.commission
 
             if signal == "BUY":
                 buy_trades.append((price, amount))
@@ -112,7 +110,7 @@ class EvaluateLivePerformance:
 
         if net_investment < 0:
             # If the net investment is negative (i.e., from SELLs), use the negative sign correctly
-            return (total_profit / abs(net_investment)) * 100  # Negative ROI
+            return (total_profit / abs(net_investment)) * 100
         else:
             return (total_profit / net_investment) * 100
 
@@ -121,8 +119,7 @@ class EvaluateLivePerformance:
         try:
             self.load_data()
         except FileNotFoundError as e:
-            print(e)
-            return
+            return 0.0, 0.0, 0.0
 
         realized_profit = self.calculate_realized_profit()
         unrealized_profit = self.calculate_unrealized_profit()

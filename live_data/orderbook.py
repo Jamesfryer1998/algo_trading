@@ -48,31 +48,34 @@ class OrderBook:
             df = pd.DataFrame(columns=['Date', 'Ticker', 'Price', 'Amount', 'Signal', 'Strategy', 'Status'])
         return df
 
+    def get_latest_price(self):
+        """
+        Get the latest price from the orderbook based on the timestamp.
+        :return: float, the latest valid price or None if no valid price exists.
+        """
+        orderbook = self.load_orderbook()
+        if not orderbook.empty:
+            valid_prices = orderbook.dropna(subset=['Price'])
+            if not valid_prices.empty:
+                latest_row = valid_prices.iloc[-1]
+                return latest_row['Price']
+        return None
+
     def add_order(self, order):
         """
-        Add a new order to the orderbook.
+        Add a new order to the orderbook. Fill missing price with the latest valid price if necessary.
         :param order: Order, the order object containing order data
         """
         df = self.load_orderbook()
+
+        if order.price is None or order.price == '':
+            latest_price = self.get_latest_price()
+            if latest_price is not None:
+                order.price = latest_price
+            else:
+                print(f"No valid price found to fill for order: {order.__dict__}")
+                return 
+
         new_order_df = order.order_to_df()
         df = pd.concat([df, new_order_df], ignore_index=True)
         self.save_orderbook(df)
-
-
-# # Example usage
-if __name__ == "__main__":
-
-    order_book = OrderBook('live_data/data/OrderBook')
-    
-    new_order = Order(
-        date=datetime.now(),
-        ticker='GBPUSD',
-        price=1.25,
-        amount=100,
-        signal='BUY',
-        strategy='RSI',
-        status='Filled'
-    )
-    
-    order_book.add_order(new_order)
-    print(order_book.load_orderbook())
