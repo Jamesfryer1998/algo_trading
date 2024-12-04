@@ -79,6 +79,9 @@ def run_live_trading(ticker, amount, broker, api, stop_event=None, update_ui_cal
     if stop_event is None:
         stop_event = threading.Event()  # Create a stop event if none is provided
 
+    if stop_event.is_set():
+        stop_event = threading.Event()
+
     if update_ui_callback is None:
         # Define a default dummy callback if none is provided
         update_ui_callback = lambda price: print(f"Price updated: {price}")
@@ -90,7 +93,7 @@ def run_live_trading(ticker, amount, broker, api, stop_event=None, update_ui_cal
     data_gen = livedata.get_live_data()
 
     orderbook_filepath = 'live_data/data/OrderBook'
-    orderbook = OrderBook(orderbook_filepath)
+    orderbook = OrderBook(api, orderbook_filepath)
 
     while not stop_event.is_set():  # Check if stop_event is set
         current_time = datetime.now().time()
@@ -117,7 +120,7 @@ def run_live_trading(ticker, amount, broker, api, stop_event=None, update_ui_cal
                 )
 
                 # Validate Order
-                validator = ValidateOrder(
+                order_validator = ValidateOrder(
                     orderbook_filepath,
                     order,
                     expected_price=price,
@@ -125,7 +128,7 @@ def run_live_trading(ticker, amount, broker, api, stop_event=None, update_ui_cal
                     num_orders_queued=1
                 )
 
-                result = validator.validate()
+                result = order_validator.validate()
 
                 if result is False:
                     pass
@@ -134,24 +137,24 @@ def run_live_trading(ticker, amount, broker, api, stop_event=None, update_ui_cal
                     api.buy(ticker, amount)
                     order.signal = 'BUY'
                     order.status = 'Filled'
-                    orderbook.add_order(order)
+                    # orderbook.add_order(order)
+                    orderbook.get_order_and_add_to_orderbook(order)
                     
                 elif signal == 2:
                     api.sell(ticker, amount)
                     order.signal = 'SELL'
                     order.status = 'Filled'
-                    orderbook.add_order(order)
+                    # orderbook.add_order(order)
+                    orderbook.get_order_and_add_to_orderbook(order)
+
 
                 else:
                     pass
         else:
             print("Trading hours are over. Running orderbook validation...")
-            validator = ValidateOrderBook(orderbook_filepath)            
-            validator.validate()
+            orderbook_validator = ValidateOrderBook(api, orderbook_filepath)            
+            orderbook_validator.validate()
             break
 
     print("Live trading stopped.")
     api.disconnect()
-
-
-

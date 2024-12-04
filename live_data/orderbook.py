@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime
-
+from validation.validate_orderbook import ValidateOrderBook
 
 class Order:
     def __init__(self, date, ticker, price, amount, signal, strategy, status):
@@ -26,8 +26,10 @@ class Order:
 
 
 class OrderBook:
-    def __init__(self, filepath):
+    def __init__(self, api, filepath):
         date = datetime.now().date()
+        self.api = api
+        self.ib = api.ib
         self.filepath = f"{filepath}-{date}.csv"
 
     def save_orderbook(self, orderbook):
@@ -79,3 +81,26 @@ class OrderBook:
         new_order_df = order.order_to_df()
         df = pd.concat([df, new_order_df], ignore_index=True)
         self.save_orderbook(df)
+
+    def get_order_and_add_to_orderbook(self, order):
+        df = self.load_orderbook()
+
+        self.connect()
+        recent_order = self.ib.executions()[-1]
+        print(recent_order.price)
+
+        order.price = recent_order.price
+        order.amount = recent_order.cumQty
+        order.date = pd.to_datetime(recent_order.time)
+
+        new_order_df = order.order_to_df()
+        df = pd.concat([df, new_order_df], ignore_index=True)
+        self.save_orderbook(df)
+
+        validate_orderbook = ValidateOrderBook(self.api, self.filepath)
+        validate_orderbook.validate()
+    
+    def connect(self):
+        self.ib.connect('127.0.0.1', 7497, clientId=1)
+        self.connected = True
+        print('IBKR Connected')

@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from utils.json_tools import load_json
 from datetime import datetime
+from validation.validate_orderbook import ValidateOrderBook
 
 class EvaluateLivePerformance:
     def __init__(self, current_price, file_name=None):
@@ -124,6 +125,9 @@ class EvaluateLivePerformance:
         realized_profit = self.calculate_realized_profit()
         unrealized_profit = self.calculate_unrealized_profit()
         roi = self.calculate_roi()
+
+        # orderbook_validator = ValidateOrderBook(self.api, self.file_name)
+        # orderbook_validator.validate()
 
         print(f"Realized Profit: {realized_profit:.2f} USD")
         print(f"Unrealized Profit: {unrealized_profit:.2f} USD")
