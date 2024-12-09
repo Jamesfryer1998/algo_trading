@@ -5,8 +5,11 @@ from datetime import datetime
 from validation.validate_orderbook import ValidateOrderBook
 
 class EvaluateLivePerformance:
-    def __init__(self, api, current_price, file_name=None):
-        self.ib = api.ib
+    def __init__(self, current_price, file_name=None, api=None):
+        if api == None:
+            self.ib = None
+        else:
+            self.ib = api.ib
         self.current_price = current_price
         self.broker = "IBKR"
         self.commission = self.get_commission()

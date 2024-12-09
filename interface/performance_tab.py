@@ -13,7 +13,7 @@ class Performance_tab:
         if self.api.is_connected():
             current_price = self.get_current_price()
             if current_price is not None:
-                eval = EvaluateLivePerformance(self.api, current_price)
+                eval = EvaluateLivePerformance(api=self.api, current_price=current_price)
                 realized_profit_value, unrealized_profit_value, roi_value = eval.evaluate()
 
                 self.roi_value_label.config(text=f"{roi_value:.3f}")
