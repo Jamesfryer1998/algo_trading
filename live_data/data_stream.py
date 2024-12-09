@@ -77,9 +77,6 @@ def run_live_trading(ticker, amount, broker, api, stop_event=None, update_ui_cal
     print(f"Setting up live trading on {broker}...")
 
     if stop_event is None:
-        stop_event = threading.Event()  # Create a stop event if none is provided
-
-    if stop_event.is_set():
         stop_event = threading.Event()
 
     if update_ui_callback is None:
@@ -103,7 +100,7 @@ def run_live_trading(ticker, amount, broker, api, stop_event=None, update_ui_cal
         if start_time <= current_time <= end_time:
             for timestamp, price, rsi, signal in data_gen:
                 if stop_event.is_set():
-                    break  # Exit the loop if stop_event is set
+                    break
 
                 # Update the UI with the latest price
                 update_ui_callback(price)
@@ -138,22 +135,19 @@ def run_live_trading(ticker, amount, broker, api, stop_event=None, update_ui_cal
                     order.signal = 'BUY'
                     order.status = 'Filled'
                     # orderbook.add_order(order)
-                    orderbook.get_order_and_add_to_orderbook(order)
+                    orderbook.get_order_and_add_to_orderbook(ticker)
                     
                 elif signal == 2:
                     api.sell(ticker, amount)
                     order.signal = 'SELL'
                     order.status = 'Filled'
                     # orderbook.add_order(order)
-                    orderbook.get_order_and_add_to_orderbook(order)
-
+                    orderbook.get_order_and_add_to_orderbook(ticker)
 
                 else:
                     pass
         else:
-            print("Trading hours are over. Running orderbook validation...")
-            orderbook_validator = ValidateOrderBook(api, orderbook_filepath)            
-            orderbook_validator.validate()
+            print("Trading hours are over.")
             break
 
     print("Live trading stopped.")

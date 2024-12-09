@@ -5,7 +5,8 @@ from datetime import datetime
 from validation.validate_orderbook import ValidateOrderBook
 
 class EvaluateLivePerformance:
-    def __init__(self, current_price, file_name=None):
+    def __init__(self, api, current_price, file_name=None):
+        self.ib = api.ib
         self.current_price = current_price
         self.broker = "IBKR"
         self.commission = self.get_commission()
@@ -29,6 +30,54 @@ class EvaluateLivePerformance:
         data = load_json("broker_API/exchange_stats.json")
         return data[self.broker]["commission_currency"]
 
+    def calculate_commission(self):
+        comission_payed = 0
+
+        for _, trade in self.data.iterrows():
+            price = trade["Price"]
+            amount = trade["Amount"]
+            commission = price * amount * self.commission
+            comission_payed += commission
+
+        return comission_payed
+    
+    def get_stats(self):
+        self.connect()
+        stats = self.ib.accountSummary()
+        currency = None
+        realized = None
+        unrealized = None
+        for item in stats:
+            if item.tag == "NetLiquidation":
+                currency = item.currency
+
+            if item.tag == "RealizedPnL" and item.currency == currency:
+                realized = float(item.value)
+
+            elif item.tag == "UnrealizedPnL" and item.currency == currency:
+                unrealized = float(item.value)
+
+        roi  = (unrealized + realized) / self.current_price
+        comission_payed = self.calculate_commission()
+
+        return (realized - comission_payed), unrealized, roi
+    
+    def evaluate_new(self):
+        try:
+            self.load_data()
+        except FileNotFoundError as e:
+            return 0.0, 0.0, 0.0
+        
+        return self.get_stats()
+
+    def connect(self):
+        self.ib.connect('127.0.0.1', 7497, clientId=1)
+        self.connected = True
+        print('IBKR Connected')
+
+
+
+    # Maybe redundant
     def calculate_realized_profit(self):
         """Calculate realized profit by matching closed trades."""
         realized_profit = 0
