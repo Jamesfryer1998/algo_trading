@@ -1,8 +1,7 @@
 import os
 import pandas as pd
-from utils.json_tools import load_json
 from datetime import datetime
-from validation.validate_orderbook import ValidateOrderBook
+from utils.json_tools import load_json
 
 class EvaluateLivePerformance:
     def __init__(self, current_price, file_name=None, api=None):
@@ -51,17 +50,23 @@ class EvaluateLivePerformance:
         realized = None
         unrealized = None
         for item in stats:
+            print(item)
             if item.tag == "NetLiquidation":
                 currency = item.currency
 
             if item.tag == "RealizedPnL" and item.currency == currency:
+                print(item)
                 realized = float(item.value)
 
             elif item.tag == "UnrealizedPnL" and item.currency == currency:
+                print(item)
                 unrealized = float(item.value)
 
         roi  = (unrealized + realized) / self.current_price
         comission_payed = self.calculate_commission()
+        print(realized)
+        print(unrealized)
+        print(roi)
 
         return (realized - comission_payed), unrealized, roi
     

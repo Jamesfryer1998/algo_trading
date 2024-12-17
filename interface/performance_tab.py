@@ -14,7 +14,7 @@ class Performance_tab:
             current_price = self.get_current_price()
             if current_price is not None:
                 eval = EvaluateLivePerformance(api=self.api, current_price=current_price)
-                realized_profit_value, unrealized_profit_value, roi_value = eval.evaluate()
+                realized_profit_value, unrealized_profit_value, roi_value = eval.evaluate_new()
 
                 self.roi_value_label.config(text=f"{roi_value:.3f}")
                 self.unrealized_profit_value_label.config(text=f"{unrealized_profit_value:.3f}")

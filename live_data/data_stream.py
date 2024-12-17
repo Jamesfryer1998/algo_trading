@@ -34,15 +34,18 @@ class LiveData:
             print(f"Failed to fetch price for {self.ticker}")
         return price
 
-    def get_live_data(self):
+    def get_live_data(self, selected_strategy_name):
         if not self.api.is_connected():
             self.api.connect()
+
+        print(f"We have {selected_strategy_name} as the selected strategy")
 
         while True:
             try:
                 price = self.fetch_forex_price()
                 timestamp = datetime.now()
                 new_data = {'timestamp': timestamp, 'price': price}
+                strategy_class = STRATEGY_REGISTRY.get(selected_strategy_name)
 
                 new_df = pd.DataFrame([new_data])
                 if not self.data_frame.empty:
@@ -52,18 +55,23 @@ class LiveData:
 
                 self.data_frame['price'] = self.data_frame['price'].astype(float)
 
-                rsi_signal, rsi_value = None, None
+                # rsi_signal, rsi_value = None, None
+                results = None, None
 
-                if len(self.data_frame) >= 14:
-                    rsi_signal, rsi_value = RSIOverboughtOversoldStrategy(self.data_frame)
-                    self.data_frame['result'] = rsi_signal
-                    print(f"Yielding data - Timestamp: {timestamp}, Price: {price}, RSI: {rsi_value}, Signal: {rsi_signal}")
-                elif len(self.data_frame) == 13:
+                if len(self.data_frame) >= 2:
+                    results = strategy_class(self.data_frame)
+                    if 'result' in self.data_frame.columns:
+                        self.data_frame.loc[self.data_frame.index[-1], 'result'] = results[0]
+                    else:
+                        self.data_frame['result'] = results[0]
+
+                    print(f"Yielding data - Timestamp: {timestamp}, Price: {price}, Indicator Value: {results[1]}, Signal: {results[0]}")
+                elif len(self.data_frame) == 1:
                     print(f"Yielding data - Timestamp: {timestamp}, Price: {price}, Starting on next run...")
                 else:
                     print(f"Yielding data - Timestamp: {timestamp}, Price: {price}, Not enough data collected...")
 
-                yield timestamp, price, rsi_value, rsi_signal
+                yield timestamp, price, results[1], results[0]
                 t.sleep(self.frequency)  # Adjust sleep duration for your requirements
 
             except Exception as e:
@@ -73,8 +81,13 @@ class LiveData:
         self.disconnect()
 
 
-def run_live_trading(ticker, amount, broker, api, stop_event=None, update_ui_callback=None):
+def run_live_trading(ticker, amount, broker, selected_strategy_name, api, stop_event=None, update_ui_callback=None):
+    print("************************************************")
     print(f"Setting up live trading on {broker}...")
+    print(f"Selected strategy: {selected_strategy_name}")
+    print(f"Ticker: {ticker}")
+    print(f"Amount: {amount}")
+    print("************************************************\n")
 
     if stop_event is None:
         stop_event = threading.Event()
@@ -87,7 +100,7 @@ def run_live_trading(ticker, amount, broker, api, stop_event=None, update_ui_cal
     asyncio.set_event_loop(loop)
 
     livedata = LiveData(ticker, api, frequency=10)
-    data_gen = livedata.get_live_data()
+    data_gen = livedata.get_live_data(selected_strategy_name)
 
     orderbook_filepath = 'live_data/data/OrderBook'
     orderbook = OrderBook(api, orderbook_filepath)
@@ -98,7 +111,7 @@ def run_live_trading(ticker, amount, broker, api, stop_event=None, update_ui_cal
         end_time = time(22, 0)   # 10 PM
 
         if start_time <= current_time <= end_time:
-            for timestamp, price, rsi, signal in data_gen:
+            for timestamp, price, indicator_value, signal in data_gen:
                 if stop_event.is_set():
                     break
 

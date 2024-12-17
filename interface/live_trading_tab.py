@@ -20,6 +20,7 @@ class Live_trade_tab:
         ticker = self.ticker_entry.get()
         amount = self.amount_entry.get()
         broker = self.broker_var.get()
+        strategy = self.strategy_var.get()
 
         if not ticker or not amount or not broker:
             print("Please fill in all the fields before starting live trading.")
@@ -33,7 +34,7 @@ class Live_trade_tab:
 
         # Run the live trading in a separate thread and pass the callback for updating the UI
         self.trading_thread = threading.Thread(target=run_live_trading, args=(
-            ticker, amount, broker, self.api, self.stop_event, self.update_ticker_info))
+            ticker, amount, broker, strategy, self.api, self.stop_event, self.update_ticker_info))
         self.trading_thread.start()
 
     def stop_live_trade(self):
@@ -64,6 +65,7 @@ class Live_trade_tab:
         tk.Label(self.live_trade_frame, text="Strategy:").pack(pady=10)
         eval = EvaluateBacktest(self.backtest_data_path, 30)
         self.strategy_var = tk.StringVar(value=eval.best_performing_strategy())
+        # self.strategy_var = tk.StringVar(value="RSIOverboughtOversoldStrategy")
         strategy_dropdown = ttk.Combobox(self.live_trade_frame, textvariable=self.strategy_var)
         strategy_dropdown['values'] = live_strategy_list()
         strategy_dropdown.pack(pady=10)

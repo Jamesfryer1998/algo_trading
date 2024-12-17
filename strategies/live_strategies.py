@@ -102,11 +102,14 @@ def RSI2Strategy(data_frame, params=(2, 10, 90)):
 def BreakoutStrategy(data_frame, params=(20, 0.02, 0.04)):
     breakout_period, stop_loss_pct, take_profit_pct = params
 
+    # Calculate the 'high' column by finding the highest price in the breakout_period
+    data_frame['high'] = data_frame['price'].rolling(window=breakout_period).max()
+
     # Calculate breakout level (highest high in the past period)
-    breakout_level = data_frame['high'].rolling(window=breakout_period).max()
+    breakout_level = data_frame['high']
 
     # Get the current close price
-    current_price = data_frame['close'].iloc[-1]
+    current_price = data_frame['price'].iloc[-1]
 
     # Calculate stop-loss and take-profit levels
     stop_loss_price = current_price * (1 - stop_loss_pct)
@@ -124,13 +127,15 @@ def BreakoutStrategy(data_frame, params=(20, 0.02, 0.04)):
 
 ##############################################################################
 def BreakdownStrategy(data_frame, params=(20, 0.02, 0.04)):
-    breakdown_period, stop_loss_pct, take_profit_pct = params
-
+    breakdown_period, stop_loss_pct, take_profit_pct = params    
+    # Calculate the 'low' column by finding the lowest price in the breakdown_period
+    data_frame['low'] = data_frame['price'].rolling(window=breakdown_period).min()
+    
     # Calculate breakdown level (lowest low in the past period)
-    breakdown_level = data_frame['low'].rolling(window=breakdown_period).min()
+    breakdown_level = data_frame['low']
 
     # Get the current close price
-    current_price = data_frame['close'].iloc[-1]
+    current_price = data_frame['price'].iloc[-1]
 
     # Calculate stop-loss and take-profit levels
     stop_loss_price = current_price * (1 + stop_loss_pct)
@@ -167,3 +172,12 @@ def live_strategy_list():
         "RSI2Strategy",
         "BreakoutStrategy", 
         "BreakdownStrategy"]
+
+STRATEGY_REGISTRY = {
+    "SimpleMovingAverageStrategy": SimpleMovingAverageStrategy,
+    "MAcrossover": MAcrossover,
+    "RSI2Strategy": RSI2Strategy,
+    "BreakoutStrategy": BreakoutStrategy,
+    "BreakdownStrategy": BreakdownStrategy,
+    "RSIOverboughtOversoldStrategy": RSIOverboughtOversoldStrategy
+}

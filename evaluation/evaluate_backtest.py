@@ -103,6 +103,14 @@ class EvaluateBacktest:
         top_strategy = sorted_strategies.idxmax()  # returns the strategy with the highest avg pnl
         
         return top_strategy
+    
+    def top_3_performing_strategies(self):
+        self.load_data()
+        
+        avg_pnl_per_strategy = self.df.groupby('strategy')['pnl'].mean()
+        sorted_strategies = avg_pnl_per_strategy.sort_values(ascending=False)   
+        top_3_strategies = sorted_strategies.head(3)
+        return top_3_strategies
         
     def send_summary_email(self):
         self.load_data()

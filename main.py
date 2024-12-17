@@ -13,11 +13,11 @@ def main():
     # backtest.fill_gaps()
     # backtest.run_backtest()
     # backtest.evaluate(30, "all")
-    # run_live_trading("GBPUSD", 10000, "IBKR", api)
+    # run_live_trading("GBPUSD", 10000, "IBKR", "BreakdownStrategy", api)  
     # evaluator = Evaluation("backtest/data", 30)
     # evaluator.best_performing_strategy()
 
-    # eval = EvaluateLivePerformance(api, 1)
+    # eval = EvaluateLivePerformance(api=api, current_price=1)
     # print(eval.evaluate_new())
 
 
