@@ -48,6 +48,7 @@ class IBKR_API:
         contract = Forex(ticker)
         order = MarketOrder(action, quantity)
 
+        print(f'\n{"*" * 40}')
         print(f"Placing {action} order for {quantity} of {ticker}")
         trade = self.ib.placeOrder(contract, order)
         
@@ -56,6 +57,7 @@ class IBKR_API:
             self.ib.sleep(1)
         
         print(f"Order {trade.orderStatus.status} with avgFillPrice: {trade.orderStatus.avgFillPrice}")
+        print(f'{"*" * 40}\n')
 
         return trade
 

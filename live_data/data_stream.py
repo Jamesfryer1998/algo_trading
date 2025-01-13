@@ -38,8 +38,6 @@ class LiveData:
         if not self.api.is_connected():
             self.api.connect()
 
-        print(f"We have {selected_strategy_name} as the selected strategy")
-
         while True:
             try:
                 price = self.fetch_forex_price()
@@ -58,7 +56,7 @@ class LiveData:
                 # rsi_signal, rsi_value = None, None
                 results = None, None
 
-                if len(self.data_frame) >= 2:
+                if len(self.data_frame) >= 15:
                     results = strategy_class(self.data_frame)
                     if 'result' in self.data_frame.columns:
                         self.data_frame.loc[self.data_frame.index[-1], 'result'] = results[0]
@@ -66,7 +64,7 @@ class LiveData:
                         self.data_frame['result'] = results[0]
 
                     print(f"Yielding data - Timestamp: {timestamp}, Price: {price}, Indicator Value: {results[1]}, Signal: {results[0]}")
-                elif len(self.data_frame) == 1:
+                elif len(self.data_frame) == 14:
                     print(f"Yielding data - Timestamp: {timestamp}, Price: {price}, Starting on next run...")
                 else:
                     print(f"Yielding data - Timestamp: {timestamp}, Price: {price}, Not enough data collected...")

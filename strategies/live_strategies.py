@@ -1,6 +1,7 @@
 
 ##############################################################################
 def RSIOverboughtOversoldStrategy(data_frame, params=(30, 75, 25)):
+# def RSIOverboughtOversoldStrategy(data_frame, params=(1, 60, 40)):
     rsi_period, rsi_overbought, rsi_oversold = params
 
     # Calculate RSI
@@ -166,7 +167,7 @@ def strategy_to_string(strategy):
 
 def live_strategy_list():
     return [
-        "RSIOverboughtOversoldStrategy"
+        "RSIOverboughtOversoldStrategy",
         "SimpleMovingAverageStrategy", 
         "MAcrossover", 
         "RSI2Strategy",

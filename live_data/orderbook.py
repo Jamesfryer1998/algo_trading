@@ -168,7 +168,7 @@ class OrderBook:
             self.save_orderbook(orderbook)
 
             # Save the updated orderbook
-            print(f"Added {len(new_orders)} new orders to the orderbook.")
+            # print(f"Added {len(new_orders)} new orders to the orderbook.")
         else:
             print("No new orders to add.")
         

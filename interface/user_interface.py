@@ -45,9 +45,9 @@ class TradingInterface:
         self.live_trade_tab = Live_trade_tab(self.notebook, self.api, self.update_ticker_info)
         self.performance_tab = Performance_tab(self.notebook, self.root, self.api, self.get_current_price)
 
+        self.live_trade_tab._build_tab()
         self.backtest_tab._build_tab()
         self.evaluation_tab._build_tab()
-        self.live_trade_tab._build_tab()
         self.performance_tab._build_tab()
 
         self._create_toggle_terminal_button()

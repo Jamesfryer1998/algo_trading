@@ -8,6 +8,7 @@ class EvaluateLivePerformance:
         if api == None:
             self.ib = None
         else:
+            self.api = api
             self.ib = api.ib
         self.current_price = current_price
         self.broker = "IBKR"
@@ -32,58 +33,52 @@ class EvaluateLivePerformance:
         data = load_json("broker_API/exchange_stats.json")
         return data[self.broker]["commission_currency"]
 
-    def calculate_commission(self):
+    def get_orderbook_stats(self):
         comission_payed = 0
+        invested_amount = 0
 
         for _, trade in self.data.iterrows():
             price = trade["Price"]
             amount = trade["Amount"]
+            invested_amount += amount
             commission = price * amount * self.commission
             comission_payed += commission
 
-        return comission_payed
+        return comission_payed, invested_amount
     
-    def get_stats(self):
-        self.connect()
-        stats = self.ib.accountSummary()
+    async def evaluate_new_async(self):
+            if self.ib.isConnected():
+                self.load_data()
+                return await self.get_stats_async()
+            else:
+                return 0.0, 0.0, 0.0
+
+    async def get_stats_async(self):
+        stats = await self.ib.accountSummaryAsync()
         currency = None
         realized = None
         unrealized = None
         for item in stats:
-            print(item)
             if item.tag == "NetLiquidation":
                 currency = item.currency
 
             if item.tag == "RealizedPnL" and item.currency == currency:
-                print(item)
                 realized = float(item.value)
 
             elif item.tag == "UnrealizedPnL" and item.currency == currency:
-                print(item)
                 unrealized = float(item.value)
 
-        roi  = (unrealized + realized) / self.current_price
-        comission_payed = self.calculate_commission()
-        print(realized)
-        print(unrealized)
-        print(roi)
+        comission_payed, invested_amount = self.get_orderbook_stats()
+        realized = realized - comission_payed
+        roi = ((unrealized + realized) / invested_amount) * 100
+        print(f"Comission payed: {comission_payed}")
 
-        return (realized - comission_payed), unrealized, roi
-    
-    def evaluate_new(self):
-        try:
-            self.load_data()
-        except FileNotFoundError as e:
-            return 0.0, 0.0, 0.0
-        
-        return self.get_stats()
+        return realized, unrealized, roi
 
     def connect(self):
         self.ib.connect('127.0.0.1', 7497, clientId=1)
         self.connected = True
         print('IBKR Connected')
-
-
 
     # Maybe redundant
     def calculate_realized_profit(self):
