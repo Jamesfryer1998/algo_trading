@@ -146,14 +146,14 @@ def run_live_trading(ticker, amount, broker, selected_strategy_name, api, stop_e
                     order.signal = 'BUY'
                     order.status = 'Filled'
                     # orderbook.add_order(order)
-                    orderbook.get_order_and_add_to_orderbook(ticker)
+                    orderbook.get_order_and_add_to_orderbook(ticker) # Get order from IBKR 
                     
                 elif signal == 2:
                     api.sell(ticker, amount)
                     order.signal = 'SELL'
                     order.status = 'Filled'
                     # orderbook.add_order(order)
-                    orderbook.get_order_and_add_to_orderbook(ticker)
+                    orderbook.get_order_and_add_to_orderbook(ticker) # Get order from IBKR 
 
                 else:
                     pass
