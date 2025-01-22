@@ -26,7 +26,7 @@ class Performance_tab:
 
     async def _fetch_performance_async(self, current_price):
         eval = EvaluateLivePerformance(api=self.api, current_price=current_price)
-        realized_profit_value, unrealized_profit_value, roi_value = await eval.evaluate_new_async()
+        realized_profit_value, unrealized_profit_value, roi_value = eval.evaluate()
 
         # Update UI elements on the main thread
         self.root.after(0, self._update_ui, realized_profit_value, unrealized_profit_value, roi_value)

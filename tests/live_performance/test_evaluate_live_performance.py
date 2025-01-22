@@ -7,9 +7,11 @@ def assert_calculations(self,
                         assert_unrealized,
                         assert_roi):
     
+    evaluator.commission = 1
+    evaluator.close_orders()
     realized_profit = evaluator.calculate_realized_profit()
     unrealized_profit = evaluator.calculate_unrealized_profit()
-    roi = evaluator.calculate_roi()
+    roi = evaluator.calculate_roi(realized_profit, unrealized_profit)
 
     self.assertAlmostEqual(realized_profit, assert_realized, places=2)
     self.assertAlmostEqual(unrealized_profit, assert_unrealized, places=2)
@@ -38,7 +40,7 @@ class TestEvaluateLivePerformance(unittest.TestCase):
         current_price = 2
         evaluator = EvaluateLivePerformance(current_price, "tests/live_performance/data/single_buy_sell.csv")
         evaluator.load_data()
-        assert_calculations(self, evaluator, -0.2, 0, -0.002)
+        assert_calculations(self, evaluator, -0.4, 0, -0.002)
 
     def test_multiple_buy(self):
         current_price = 2
@@ -56,10 +58,10 @@ class TestEvaluateLivePerformance(unittest.TestCase):
         current_price = 2
         evaluator = EvaluateLivePerformance(current_price, "tests/live_performance/data/buy_buy_sell.csv")
         evaluator.load_data()
-        assert_calculations(self, evaluator, -0.2, 9999.399, 99.99)
+        assert_calculations(self, evaluator, 0, 9999.399, 33.33)
 
     def test_sell_sell_buy(self):
         current_price = 2
         evaluator = EvaluateLivePerformance(current_price, "tests/live_performance/data/sell_sell_buy.csv")
         evaluator.load_data()
-        assert_calculations(self, evaluator, -0.2, -10000.60, -100.008)
+        assert_calculations(self, evaluator, 0, -10000.60, -33.335)

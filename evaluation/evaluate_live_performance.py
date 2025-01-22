@@ -174,8 +174,9 @@ class EvaluateLivePerformance:
             float: Total realized profit in USD.
         """
         realized_profit = 0.0
-        for order in self.data:
-            if order['Status'] == 'Filled' and not order.get('is_closed', False):
+
+        for _, order in self.data.iterrows():  # Use iterrows for DataFrame iteration
+            if order['Status'] == 'Closed':  # Use 'Closed' status to determine if the order is realized
                 # Calculate profit for SELL orders
                 if order['Signal'] == 'SELL':
                     profit = (order['Price'] - order.get('EntryPrice', order['Price'])) * order['Amount']
@@ -185,12 +186,10 @@ class EvaluateLivePerformance:
                 else:
                     continue
 
+                profit -= self.commission * order['Amount']
                 realized_profit += profit
 
-                # Mark order as closed
-                order['is_closed'] = True
-
-        self.realized_profit = realized_profit
+        return realized_profit
 
     def calculate_unrealized_profit(self):
         """
@@ -200,8 +199,9 @@ class EvaluateLivePerformance:
             float: Total unrealized profit in USD.
         """
         unrealized_profit = 0.0
-        for order in self.data:
-            if order['Status'] != 'Filled' or order.get('is_closed', False):
+
+        for _, order in self.data.iterrows():  # Use iterrows for DataFrame iteration
+            if order['Status'] != 'Filled':  # Only include orders that are not yet realized
                 continue
 
             if order['Signal'] == 'SELL':
@@ -211,22 +211,23 @@ class EvaluateLivePerformance:
             else:
                 continue
 
+            profit -= self.commission * order['Amount']
             unrealized_profit += profit
 
-        self.unrealized_profit = unrealized_profit
+        return unrealized_profit
 
-    def calculate_roi(self):
+    def calculate_roi(self, realized, unrealized):
         """
         Calculate return on investment (ROI).
 
         Returns:
             float: ROI percentage.
         """
-        total_investment = sum(order['Price'] * order['Amount'] for order in self.data if order['Status'] == 'Filled')
+        total_investment = sum(order['Price'] * order['Amount'] for _, order in self.data.iterrows() if order['Status'] in ['Filled', 'Closed'])
         if total_investment == 0:
             return 0.0
 
-        total_profit = self.realized_profit + self.unrealized_profit
+        total_profit = realized + unrealized
         roi = (total_profit / total_investment) * 100
 
         return roi
@@ -237,22 +238,22 @@ class EvaluateLivePerformance:
 
         Modifies the 'Status' column of the DataFrame to 'Closed' for matched orders.
         """
-        for i, order in enumerate(self.data):
+        for i, order in self.data.iterrows():
             if order['Status'] != 'Filled':
                 continue
 
             # Find the opposite signal to match
             opposite_signal = 'BUY' if order['Signal'] == 'SELL' else 'SELL'
 
-            for j, match_order in enumerate(self.data):
+            for j, match_order in self.data.iterrows():
                 if (
                     match_order['Status'] == 'Filled' and
                     match_order['Signal'] == opposite_signal and
                     match_order['Date'] > order['Date']  # Prioritize earlier orders
                 ):
                     # Match found, close both orders
-                    self.data[i]['Status'] = 'Closed'
-                    self.data[j]['Status'] = 'Closed'
+                    self.data.at[i, 'Status'] = 'Closed'
+                    self.data.at[j, 'Status'] = 'Closed'
                     break
 
     def evaluate(self):
@@ -263,12 +264,12 @@ class EvaluateLivePerformance:
             return 0.0, 0.0, 0.0
 
         self.close_orders()  # Ensure orders are matched and closed
-        self.calculate_realized_profit()
-        self.calculate_unrealized_profit()
-        roi = self.calculate_roi()
+        realized_profit = self.calculate_realized_profit()
+        unrealized_profit = self.calculate_unrealized_profit()
+        roi = self.calculate_roi(realized_profit, unrealized_profit)
 
-        print(f"Realized Profit: {self.realized_profit:.2f} USD")
-        print(f"Unrealized Profit: {self.unrealized_profit:.2f} USD")
+        print(f"Realized Profit: {realized_profit:.2f} USD")
+        print(f"Unrealized Profit: {unrealized_profit:.2f} USD")
         print(f"ROI: {roi:.2f}%")
 
-        return self.realized_profit, self.unrealized_profit, roi
+        return realized_profit, unrealized_profit, roi
