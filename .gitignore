@@ -3,4 +3,5 @@ __pycache__/
 
 backtest/data/
 live_data/data/
+evaluation/data/
 utils/secrets.json

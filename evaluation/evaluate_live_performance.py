@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from datetime import datetime
-from utils.json_tools import load_json
+from utils.json_tools import load_json, save_json
 
 class EvaluateLivePerformance:
     def __init__(self, current_price, file_name=None, api=None):
@@ -14,6 +14,7 @@ class EvaluateLivePerformance:
         self.broker = "IBKR"
         self.commission = self.get_commission()
         self.data = None
+        self.performance_file_path = f"evaluation/data/{datetime.now().date()}-perfMetrics.json"
         if file_name == None:
             self.file_name = f"live_data/data/OrderBook-{datetime.now().date()}.csv"
         else:
@@ -78,93 +79,6 @@ class EvaluateLivePerformance:
         self.ib.connect('127.0.0.1', 7497, clientId=1)
         self.connected = True
         print('IBKR Connected')
-
-    # Maybe redundant
-    # def calculate_realized_profit(self):
-    #     """Calculate realized profit by matching closed trades."""
-    #     realized_profit = 0
-    #     buy_trades = []
-    #     sell_trades = []
-
-    #     for _, row in self.data.iterrows():
-    #         signal = row["Signal"]
-    #         price = row["Price"]
-    #         amount = row["Amount"]
-    #         commission = price * amount * self.commission
-
-    #         if signal == "BUY":
-    #             buy_trades.append((price, amount))
-    #         elif signal == "SELL":
-    #             sell_trades.append((price, amount))
-
-    #         # Match trades (FIFO logic for simplicity)
-    #         while buy_trades and sell_trades:
-    #             buy_price, buy_amount = buy_trades.pop(0)
-    #             sell_price, sell_amount = sell_trades.pop(0)
-
-    #             matched_amount = min(buy_amount, sell_amount)
-    #             realized_profit += (sell_price - buy_price) * matched_amount - commission
-
-    #             # Adjust remaining amounts
-    #             if buy_amount > sell_amount:
-    #                 buy_trades.insert(0, (buy_price, buy_amount - matched_amount))
-    #             elif sell_amount > buy_amount:
-    #                 sell_trades.insert(0, (sell_price, sell_amount - matched_amount))
-
-    #     return realized_profit
-
-    # def calculate_unrealized_profit(self):
-    #     """Calculate unrealized profit for open trades, accounting for commission."""
-    #     unrealized_profit = 0
-    #     capital = 0
-
-    #     for _, trade in self.data.iterrows():
-    #         if trade["Status"] == "Filled":
-    #             price = trade["Price"]
-    #             amount = trade["Amount"]
-    #             commission = price * amount * self.commission
-
-    #             if trade["Signal"] == "SELL":
-    #                 # Unrealized profit for short position (SELL trade)
-    #                 profit = (price - self.current_price) * amount
-    #                 capital -= trade["Amount"]
-    #             else:  # Long position for BUY signal
-    #                 profit = (self.current_price - price) * amount
-    #                 capital += trade["Amount"]
-
-    #             # Deduct commission for open positions
-    #             unrealized_profit += profit - commission
-
-    #     if capital == 0:
-    #         return 0
-
-    #     return unrealized_profit
-    
-
-    # def calculate_roi(self):
-    #     """Calculate ROI as a percentage."""
-    #     realized_profit = self.calculate_realized_profit()
-    #     unrealized_profit = self.calculate_unrealized_profit()
-
-    #     buy_investment = (self.data.loc[self.data["Signal"] == "BUY", "Price"] * 
-    #                     self.data.loc[self.data["Signal"] == "BUY", "Amount"]).sum()
-
-    #     sell_proceeds = (self.data.loc[self.data["Signal"] == "SELL", "Price"] * 
-    #                     self.data.loc[self.data["Signal"] == "SELL", "Amount"]).sum()
-
-    #     net_investment = buy_investment - sell_proceeds
-
-    #     # Avoid division by zero
-    #     if net_investment == 0:
-    #         return 0
-
-    #     total_profit = realized_profit + unrealized_profit
-
-    #     if net_investment < 0:
-    #         # If the net investment is negative (i.e., from SELLs), use the negative sign correctly
-    #         return (total_profit / abs(net_investment)) * 100
-    #     else:
-    #         return (total_profit / net_investment) * 100
 
     def calculate_realized_profit(self):
         """
@@ -256,6 +170,27 @@ class EvaluateLivePerformance:
                     self.data.at[j, 'Status'] = 'Closed'
                     break
 
+    def save_performance(self, realized, unrealized, roi):
+        new_data = {
+            'DateTime': datetime.now().isoformat(),  # Convert to string for JSON
+            'Strategy': str(self.data['Strategy'].iloc[0]),
+            'Realized': realized,
+            'Unrealized': unrealized,
+            'ROI': roi
+        }
+
+        if os.path.exists(self.performance_file_path):
+            past_data = load_json(self.performance_file_path)
+
+            if not isinstance(past_data, list):
+                past_data = [past_data]  # Convert dict to list if needed
+
+            past_data.append(new_data)  # Append new entry
+            new_data = past_data
+
+        save_json(new_data, self.performance_file_path) 
+
+
     def evaluate(self):
         """Evaluate all performance metrics."""
         try:
@@ -268,8 +203,10 @@ class EvaluateLivePerformance:
         unrealized_profit = self.calculate_unrealized_profit()
         roi = self.calculate_roi(realized_profit, unrealized_profit)
 
-        print(f"Realized Profit: {realized_profit:.2f} USD")
-        print(f"Unrealized Profit: {unrealized_profit:.2f} USD")
-        print(f"ROI: {roi:.2f}%")
+        self.save_performance(realized_profit, unrealized_profit, roi)
+
+        # print(f"Realized Profit: {realized_profit:.2f} USD")
+        # print(f"Unrealized Profit: {unrealized_profit:.2f} USD")
+        # print(f"ROI: {roi:.2f}%")
 
         return realized_profit, unrealized_profit, roi
