@@ -7,7 +7,7 @@ def assert_calculations(self,
                         assert_unrealized,
                         assert_roi):
     
-    evaluator.commission = 1
+    # evaluator.commission = 1
     evaluator.close_orders()
     realized_profit = evaluator.calculate_realized_profit()
     unrealized_profit = evaluator.calculate_unrealized_profit()
